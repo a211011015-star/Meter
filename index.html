@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Speedometer</title>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #111a2e;
+      --text: #e7ecff;
+      --muted: rgba(231,236,255,.7);
+      --accent: #6ea8ff;
+      --danger: #ff5a7a;
+      --ok: #53d6a0;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1200px 800px at 50% 30%, #151e35 0%, var(--bg) 55%, #070a12 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .card {
+      width: min(520px, 92vw);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 18px 18px 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      margin: 0;
+      letter-spacing: .2px;
+      opacity: .95;
+    }
+
+    .header .meta {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .gauge-wrap {
+      display: grid;
+      place-items: center;
+      padding: 8px 0 12px;
+    }
+
+    /* Gauge */
+    .gauge {
+      width: min(420px, 86vw);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    /* Outer ring with subtle highlight */
+    .gauge::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.18), rgba(255,255,255,0) 38%),
+        radial-gradient(circle at 50% 60%, rgba(0,0,0,.55), rgba(0,0,0,.85) 60%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    /* The colored arc (progress) */
+    .arc {
+      position: absolute;
+      inset: 10%;
+      border-radius: 50%;
+      background:
+        conic-gradient(
+          from 225deg,
+          var(--ok) 0deg,
+          var(--accent) 120deg,
+          var(--danger) 210deg,
+          rgba(255,255,255,.10) 0deg
+        );
+      /* show only top 270deg by masking bottom portion */
+      mask: radial-gradient(circle at 50% 50%, transparent 61%, #000 62%);
+      -webkit-mask: radial-gradient(circle at 50% 50%, transparent 61%, #000 62%);
+      filter: drop-shadow(0 0 12px rgba(110,168,255,.20));
+      opacity: .95;
+    }
+
+    /* Track arc behind */
+    .track {
+      position: absolute;
+      inset: 10%;
+      border-radius: 50%;
+      background: conic-gradient(from 225deg, rgba(255,255,255,.12) 0 270deg, rgba(255,255,255,0) 0);
+      mask: radial-gradient(circle at 50% 50%, transparent 61%, #000 62%);
+      -webkit-mask: radial-gradient(circle at 50% 50%, transparent 61%, #000 62%);
+      opacity: .9;
+    }
+
+    /* Mask the bottom quarter to make it a speedometer (not full circle) */
+    .cut {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 105%, rgba(0,0,0,1) 58%, rgba(0,0,0,0) 60%);
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      opacity: 1;
+    }
+
+    /* Inner panel */
+    .inner {
+      position: absolute;
+      inset: 18%;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(17,26,46,.96), rgba(9,12,22,.96));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: inset 0 0 24px rgba(0,0,0,.65);
+      display: grid;
+      place-items: center;
+    }
+
+    /* Needle */
+    .needle {
+      position: absolute;
+      width: 46%;
+      height: 4px;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0% 50%;
+      transform: translateY(-50%) rotate(225deg);
+      transition: transform 80ms linear;
+      filter: drop-shadow(0 0 10px rgba(0,0,0,.55));
+    }
+
+    .needle::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.9) 12%, rgba(255,90,122,.95) 80%, rgba(255,90,122,1));
+    }
+
+    .hub {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,255,255,.2) 35%, rgba(0,0,0,.85) 70%);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 16px rgba(110,168,255,.25);
+    }
+
+    /* Ticks + labels container */
+    .ticks {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .tick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0% 50%;
+      opacity: .95;
+    }
+
+    .tick .line {
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.62);
+    }
+
+    .tick.minor .line { width: 12px; opacity: .45; }
+    .tick.major .line { width: 20px; opacity: .85; }
+
+    .tick .label {
+      position: absolute;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: rgba(231,236,255,.78);
+      letter-spacing: .2px;
+    }
+
+    /* Readout */
+    .readout {
+      text-align: center;
+      display: grid;
+      gap: 4px;
+      transform: translateY(10px);
+    }
+
+    .value {
+      font-size: 52px;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .unit {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: .2px;
+    }
+
+    button:hover { background: rgba(255,255,255,.09); }
+    button:active { transform: translateY(1px); }
+
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>Speedometer</h1>
+      <div class="meta"><span id="minLabel">0</span>–<span id="maxLabel">180</span> km/h</div>
+    </div>
+
+    <div class="gauge-wrap">
+      <div class="gauge" id="gauge">
+        <div class="track"></div>
+        <div class="arc" id="arc"></div>
+
+        <div class="ticks" id="ticks"></div>
+
+        <div class="needle" id="needle"></div>
+        <div class="hub"></div>
+
+        <div class="inner">
+          <div class="readout">
+            <div class="value" id="value">0</div>
+            <div class="unit" id="unit">km/h</div>
+            <div class="kv">
+              <span>Angle: <span id="angleOut">225</span>°</span>
+              <span>Mode: <span id="modeOut">Manual</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cut"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <input id="slider" type="range" min="0" max="180" value="0" step="1" />
+      </div>
+
+      <div class="btns">
+        <button id="randomBtn" type="button">Random</button>
+        <button id="demoBtn" type="button">Demo Sweep</button>
+        <button id="stopBtn" type="button">Stop</button>
+        <button id="unitBtn" type="button">Toggle Units</button>
+      </div>
+
+      <div class="note">
+        Implementation notes: the needle rotates across a 270° sweep (225° → 495°). The arc is a conic-gradient clipped
+        to a ring and masked so the bottom portion is hidden, forming a classic speedometer.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Config ---
+    const SWEEP_DEG = 270;       // Visible sweep
+    const START_DEG = 225;       // Left-lower start
+    const END_DEG = START_DEG + SWEEP_DEG;
+
+    let min = 0;
+    let max = 180;
+
+    let unit = "km/h";           // or "mph"
+    let demoTimer = null;
+    let currentValue = 0;
+
+    // --- Elements ---
+    const needle = document.getElementById("needle");
+    const valueEl = document.getElementById("value");
+    const angleOut = document.getElementById("angleOut");
+    const slider = document.getElementById("slider");
+    const ticksEl = document.getElementById("ticks");
+    const modeOut = document.getElementById("modeOut");
+    const minLabel = document.getElementById("minLabel");
+    const maxLabel = document.getElementById("maxLabel");
+    const unitEl = document.getElementById("unit");
+
+    // --- Helpers ---
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function valueToAngle(v) {
+      const t = (clamp(v, min, max) - min) / (max - min || 1);
+      return lerp(START_DEG, END_DEG, t);
+    }
+
+    function setGauge(v, mode = "Manual") {
+      currentValue = clamp(v, min, max);
+
+      // Display
+      valueEl.textContent = Math.round(currentValue);
+      unitEl.textContent = unit;
+
+      // Needle rotation
+      const ang = valueToAngle(currentValue);
+      needle.style.transform = `translateY(-50%) rotate(${ang}deg)`;
+      angleOut.textContent = Math.round(ang);
+
+      // Slider sync (convert if needed, but slider always tracks displayed unit range)
+      slider.value = String(Math.round(currentValue));
+
+      // Mode
+      modeOut.textContent = mode;
+    }
+
+    function rebuildScale() {
+      // Update labels and slider
+      minLabel.textContent = String(min);
+      maxLabel.textContent = String(max);
+      slider.min = String(min);
+      slider.max = String(max);
+
+      // Build ticks: major every 20, minor every 10
+      ticksEl.innerHTML = "";
+      const majorStep = 20;
+      const minorStep = 10;
+
+      for (let v = min; v <= max; v += minorStep) {
+        const isMajor = (v - min) % majorStep === 0;
+        const tick = document.createElement("div");
+        tick.className = "tick " + (isMajor ? "major" : "minor");
+
+        const ang = valueToAngle(v);
+
+        tick.style.transform = `translateY(-50%) rotate(${ang}deg) translateX(58%)`;
+
+        const line = document.createElement("div");
+        line.className = "line";
+        tick.appendChild(line);
+
+        if (isMajor) {
+          const label = document.createElement("div");
+          label.className = "label";
+          label.textContent = String(v);
+          tick.appendChild(label);
+        }
+
+        ticksEl.appendChild(tick);
+      }
+    }
+
+    function stopDemo() {
+      if (demoTimer) {
+        clearInterval(demoTimer);
+        demoTimer = null;
+      }
+      modeOut.textContent = "Manual";
+    }
+
+    function toggleUnits() {
+      // Simple conversion + adjust range to typical values
+      // km/h <-> mph
+      const toMph = (kmh) => kmh * 0.621371;
+      const toKmh = (mph) => mph / 0.621371;
+
+      if (unit === "km/h") {
+        unit = "mph";
+        // Convert current, and convert range
+        currentValue = toMph(currentValue);
+        min = Math.round(toMph(min));
+        max = Math.round(toMph(max));
+      } else {
+        unit = "km/h";
+        currentValue = toKmh(currentValue);
+        min = Math.round(toKmh(min));
+        max = Math.round(toKmh(max));
+      }
+
+      // Ensure sane bounds
+      min = Math.max(0, min);
+      max = Math.max(min + 20, max);
+
+      rebuildScale();
+      setGauge(currentValue, "Manual");
+    }
+
+    // --- Wire up events ---
+    slider.addEventListener("input", () => {
+      stopDemo();
+      setGauge(Number(slider.value), "Manual");
+    });
+
+    document.getElementById("randomBtn").addEventListener("click", () => {
+      stopDemo();
+      const v = Math.random() * (max - min) + min;
+      setGauge(v, "Random");
+      setTimeout(() => (modeOut.textContent = "Manual"), 700);
+    });
+
+    document.getElementById("demoBtn").addEventListener("click", () => {
+      stopDemo();
+      modeOut.textContent = "Demo";
+
+      let v = min;
+      let dir = 1;
+
+      demoTimer = setInterval(() => {
+        v += dir * 2;
+        if (v >= max) { v = max; dir = -1; }
+        if (v <= min) { v = min; dir = 1; }
+        setGauge(v, "Demo");
+      }, 30);
+    });
+
+    document.getElementById("stopBtn").addEventListener("click", () => stopDemo());
+    document.getElementById("unitBtn").addEventListener("click", () => toggleUnits());
+
+    // --- Init ---
+    rebuildScale();
+    setGauge(0, "Manual");
+  </script>
+</body>
+</html>
