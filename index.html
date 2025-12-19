@@ -1,217 +1,226 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Osama Meter</title>
+<meta charset="UTF-8">
+<title>Osama Meter – Classic GSAP Speedometer</title>
+
+<!-- ================= REQUIRED LIBRARIES ================= -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/plugins/CSSPlugin.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/easing/EasePack.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/TweenLite.min.js"></script>
 
 <style>
-:root{
-  --bg:#000;
-  --white:#f5f7ff;
-  --gray:#9aa3b2;
-  --red:#ff2a4f;
-}
+/* ================= BASE ================= */
+*{ box-sizing:border-box; }
 
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
+html,body{
+  height:100%;
+  margin:0;
+}
 
 body{
   background:#000;
-  color:var(--white);
-  font-family:system-ui,Segoe UI,Roboto,Arial;
+  color:#fff;
+  font-family:Arial, Helvetica, sans-serif;
   display:flex;
   justify-content:center;
   align-items:center;
 }
 
-/* ===== MAIN HUD ===== */
-.hud{
-  width:100%;
-  max-width:420px;
-  height:100vh;
+/* ================= LAYOUT ================= */
+#wrapper{
   display:flex;
-  flex-direction:column;
-  justify-content:center;
+  gap:60px;
   align-items:center;
+}
+
+/* ================= GAUGE ================= */
+#gauge{
   position:relative;
+  width:320px;
+  height:320px;
 }
 
-/* ===== TITLE ===== */
-.header{
-  position:absolute;
-  top:40px;
-  text-align:center;
-}
-.header h1{
-  font-size:18px;
-  margin:0;
-  font-weight:700;
-}
-.header p{
-  margin:4px 0 0;
-  color:var(--gray);
-  font-size:14px;
-}
-
-/* ===== GAUGE ===== */
-.gauge{
-  position:relative;
-  width:300px;
-  height:300px;
-}
-
-/* Arc */
-.arc{
+#circle{
   position:absolute;
   inset:0;
   border-radius:50%;
-  background:
-    conic-gradient(
-      from 225deg,
-      #fff 0deg 180deg,
-      var(--red) 180deg 270deg,
-      transparent 270deg
-    );
-  mask:radial-gradient(circle,transparent 68%,black 69%);
+  border:10px solid #1a1a1a;
+  background:#000;
 }
 
-/* Segments */
-.arc::after{
+/* Numbers */
+#numbers{
+  position:absolute;
+  inset:0;
+  font-size:12px;
+  color:#fff;
+}
+
+#numbers span{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform-origin:50% 150px;
+}
+
+/* Unit label */
+#mi-km{
+  position:absolute;
+  bottom:42px;
+  width:100%;
+  text-align:center;
+  font-size:14px;
+  color:#aaa;
+  letter-spacing:1px;
+}
+
+/* Needle */
+#needle{
+  position:absolute;
+  width:4px;
+  height:140px;
+  background:#ff2a4f;
+  left:50%;
+  bottom:50%;
+  transform-origin:50% 100%;
+  transform:rotate(-120deg);
+}
+
+/* Center hub */
+#needle::after{
   content:"";
   position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:
-    repeating-conic-gradient(
-      from 225deg,
-      transparent 0deg 5deg,
-      black 5deg 8deg
-    );
-  mask:radial-gradient(circle,transparent 68%,black 69%);
-}
-
-/* ===== CENTER READOUT ===== */
-.center{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-.speed{
-  font-size:96px;
-  font-weight:900;
-  line-height:1;
-}
-
-.unit{
-  font-size:16px;
-  letter-spacing:2px;
-  color:var(--gray);
-}
-
-.gear-label{
-  margin-top:10px;
-  font-size:14px;
-  color:var(--gray);
-}
-
-.gear{
-  font-size:36px;
-  color:var(--red);
-  font-weight:800;
-}
-
-/* ===== BATTERY ===== */
-.battery{
-  position:absolute;
-  right:20px;
-  height:120px;
+  bottom:-8px;
+  left:-6px;
   width:16px;
-  border:2px solid #fff;
-  padding:2px;
-}
-.battery-level{
-  width:100%;
+  height:16px;
+  border-radius:50%;
   background:#fff;
-  height:50%;
 }
 
-/* ===== FOOTER ===== */
-.footer{
-  position:absolute;
-  bottom:30px;
-  color:var(--gray);
-  font-size:13px;
+/* ================= INPUT PANEL ================= */
+#left{
+  min-width:200px;
+}
+
+#left div{
+  margin-bottom:12px;
+}
+
+label{
+  display:inline-block;
+  width:90px;
+}
+
+input{
+  width:90px;
+  padding:5px;
+  background:#000;
+  border:1px solid #444;
+  color:#fff;
+}
+
+#errmsg{
+  margin-top:10px;
+  color:#ff2a4f;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="hud">
+<div id="wrapper">
 
-  <div class="header">
-    <h1>Osama Meter</h1>
-    <p>دراجة عبد الحليم</p>
+  <!-- ================= SPEEDOMETER ================= -->
+  <div id="gauge">
+    <div id="circle"></div>
+    <div id="numbers"></div>
+    <div id="mi-km">MPH</div>
+    <div id="needle"></div>
   </div>
 
-  <div class="gauge">
-    <div class="arc"></div>
-
-    <div class="center">
-      <div class="speed" id="speed">0</div>
-      <div class="unit">KM/H</div>
-      <div class="gear-label">GEAR</div>
-      <div class="gear" id="gear">1</div>
+  <!-- ================= INPUTS ================= -->
+  <div id="left">
+    <div>
+      <label for="miles">Miles:</label>
+      <input type="text" id="miles">
     </div>
-  </div>
-
-  <div class="battery">
-    <div class="battery-level" id="battery"></div>
-  </div>
-
-  <div class="footer">
-    GPS ACTIVE
+    <div>
+      <label for="kilometers">Kilometers:</label>
+      <input type="text" id="kilometers">
+    </div>
+    <p id="errmsg"></p>
   </div>
 
 </div>
 
 <script>
-/* ===== SPEED + GEAR ===== */
-let ema=0;
-const EMA=0.25;
+/* ================= CONFIG ================= */
+var MAX_MPH = 120;
+var START_ANGLE = -120;
+var END_ANGLE = 120;
 
-function gearFromSpeed(v){
-  if(v<=10) return 1;
-  if(v<=15) return 2;
-  if(v<=20) return 3;
-  if(v<=25) return 4;
-  return 5;
+/* ================= BUILD SCALE ================= */
+for(var i = 0; i <= MAX_MPH; i += 10){
+  var angle = START_ANGLE + (i / MAX_MPH) * (END_ANGLE - START_ANGLE);
+  var mark = $("<span>"+i+"</span>");
+
+  mark.css({
+    transform:
+      "rotate("+angle+"deg) translate(0,-145px) rotate("+(-angle)+"deg)"
+  });
+
+  $("#numbers").append(mark);
 }
 
-navigator.geolocation.watchPosition(p=>{
-  let kmh=p.coords.speed!=null ? p.coords.speed*3.6 : 0;
-  ema=EMA*kmh+(1-EMA)*ema;
+/* ================= NEEDLE CONTROL ================= */
+function setSpeed(mph){
+  var angle = START_ANGLE + (mph / MAX_MPH) * (END_ANGLE - START_ANGLE);
 
-  document.getElementById("speed").textContent=Math.round(ema);
-  document.getElementById("gear").textContent=gearFromSpeed(ema);
-},{},{enableHighAccuracy:true});
-
-/* ===== BATTERY ===== */
-if(navigator.getBattery){
-  navigator.getBattery().then(b=>{
-    function update(){
-      document.getElementById("battery").style.height=
-        (b.level*100)+"%";
-    }
-    update();
-    b.addEventListener("levelchange",update);
+  TweenLite.to("#needle", 0.9, {
+    rotation: angle,
+    ease: Power2.easeOut
   });
 }
+
+/* ================= INPUT LOGIC ================= */
+$("#miles").on("input", function(){
+  var mph = parseFloat(this.value);
+
+  if(isNaN(mph) || mph < 0 || mph > MAX_MPH){
+    $("#errmsg").text("Miles must be between 0 and " + MAX_MPH);
+    return;
+  }
+
+  $("#errmsg").text("");
+  $("#kilometers").val((mph * 1.60934).toFixed(2));
+  $("#mi-km").text("MPH");
+  setSpeed(mph);
+});
+
+$("#kilometers").on("input", function(){
+  var km = parseFloat(this.value);
+
+  if(isNaN(km) || km < 0){
+    $("#errmsg").text("Enter a valid kilometer value");
+    return;
+  }
+
+  var mph = km / 1.60934;
+
+  if(mph > MAX_MPH){
+    $("#errmsg").text("Speed exceeds gauge limit");
+    return;
+  }
+
+  $("#errmsg").text("");
+  $("#miles").val(mph.toFixed(2));
+  $("#mi-km").text("KM/H");
+  setSpeed(mph);
+});
 </script>
 
 </body>
