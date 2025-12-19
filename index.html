@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Racing GPS Speedometer</title>
+<title>Osama Meter</title>
 
 <style>
 :root{
@@ -11,7 +11,6 @@
   --text:#f2f6ff;
   --muted:#9aa3b2;
   --green:#1cff9a;
-  --blue:#4da3ff;
   --red:#ff2a4f;
   --amber:#ffd166;
 }
@@ -23,86 +22,52 @@ body{
   margin:0;
   background:#000;
   color:var(--text);
-  font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
   display:grid;
   place-items:center;
 }
 
-/* ================= FRAME ================= */
 .frame{
   width:min(560px,96vw);
   padding:14px;
   border-radius:16px;
-  background:
-    repeating-linear-gradient(
-      45deg,#0b0b0b,#0b0b0b 6px,#101010 6px,#101010 12px
-    );
   border:2px solid #1a1a1a;
   box-shadow:0 25px 60px rgba(0,0,0,.9);
 }
 
+.frame.hid{
+  box-shadow:0 0 25px var(--red), 0 0 60px rgba(255,42,79,.8);
+}
+
 .top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  text-align:center;
   margin-bottom:8px;
 }
 .title{
-  font-size:13px;
+  font-size:18px;
   font-weight:900;
-  letter-spacing:1.2px;
 }
-.pill{
-  font-size:12px;
-  padding:5px 10px;
-  border:1px solid #222;
-  background:#000;
+.subtitle{
+  font-size:14px;
   color:var(--muted);
 }
 
-/* ================= GAUGE ================= */
 .gauge{
   position:relative;
   width:100%;
   aspect-ratio:1/1;
-  display:grid;
-  place-items:center;
-}
-
-.bezel{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:radial-gradient(circle,#111 0%,#000 65%);
-  border:6px solid #1c1c1c;
-  z-index:0;
-}
-
-.track{
-  position:absolute;
-  inset:8%;
-  border-radius:50%;
-  background:
-    repeating-linear-gradient(
-      45deg,#0c0c0c,#0c0c0c 4px,#111 4px,#111 8px
-    );
-  border:3px solid #151515;
-  z-index:1;
 }
 
 .arc{
   position:absolute;
-  inset:8%;
+  inset:10%;
   border-radius:50%;
-  background:
-    conic-gradient(from 225deg,
-      var(--green) 0deg,
-      var(--blue) 160deg,
-      var(--red) 260deg,
-      transparent 0deg);
-  mask:radial-gradient(circle,transparent 64%,black 65%);
-  -webkit-mask:radial-gradient(circle,transparent 64%,black 65%);
-  z-index:2;
+  background:conic-gradient(from 225deg,
+    var(--green) 0deg,
+    var(--amber) 180deg,
+    var(--red) 260deg,
+    transparent 0deg);
+  mask:radial-gradient(circle,transparent 62%,black 63%);
 }
 
 .cut{
@@ -110,182 +75,103 @@ body{
   inset:0;
   border-radius:50%;
   background:radial-gradient(circle at 50% 108%,#000 57%,transparent 59%);
-  z-index:3;
 }
 
-/* ================= TICKS ================= */
-.ticks{
-  position:absolute;
-  inset:0;
-  z-index:4;
-  pointer-events:none;
-}
-
-.tick{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform-origin:0% 50%;
-}
-
-.tick .line{height:3px;background:#cfd6ff}
-.tick.minor .line{width:10px;opacity:.35}
-.tick.major .line{width:22px}
-
-.tick .label{
-  position:absolute;
-  left:32px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:12px;
-  font-weight:700;
-}
-
-/* ================= NEEDLE ================= */
 .needle{
   position:absolute;
-  width:48%;
-  height:5px;
+  width:45%;
+  height:4px;
   left:50%;
   top:50%;
   transform-origin:0% 50%;
-  transform:translateY(-50%) rotate(225deg);
-  background:linear-gradient(90deg,#fff,#ff2a4f 85%);
-  z-index:6;
+  background:linear-gradient(90deg,#fff,#ff2a4f);
 }
 
-.hub{
-  position:absolute;
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  background:#000;
-  border:3px solid #444;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  z-index:7;
-}
-
-/* ================= CENTER ================= */
 .inner{
   position:absolute;
-  inset:24%;
+  inset:30%;
   border-radius:50%;
   background:#000;
-  border:2px solid #1b1b1b;
   display:grid;
   place-items:center;
-  z-index:5;
+  text-align:center;
 }
 
-.readout{text-align:center}
-
 .speed{
-  font-size:64px;
+  font-size:48px;
   font-weight:900;
-  letter-spacing:1px;
-  position:relative;
-  z-index:7;
+}
+
+.gear{
+  font-size:22px;
+  color:var(--amber);
+  font-weight:800;
 }
 
 .unit{
   font-size:12px;
-  letter-spacing:1.4px;
   color:var(--muted);
 }
 
-.info{
-  display:flex;
-  gap:10px;
-  font-size:11px;
-  color:#aab2c8;
-  justify-content:center;
-}
-.info span{
-  padding:4px 6px;
-  border:1px solid #222;
-}
-
-/* ================= BOTTOM ================= */
-.bottom{
-  margin-top:12px;
+.controls{
   display:flex;
   justify-content:space-between;
-  font-size:12px;
+  margin-top:10px;
 }
-.dot{
-  width:10px;height:10px;border-radius:50%;background:#333;
-}
-.dot.ok{background:var(--green)}
-.dot.warn{background:var(--amber)}
-.dot.bad{background:var(--red)}
 
 button{
   background:#000;
-  border:2px solid #222;
+  border:2px solid #333;
   color:#fff;
   padding:8px 12px;
-  font-weight:800;
-  cursor:pointer;
+  font-weight:700;
 }
 </style>
 </head>
 
 <body>
-<div class="frame">
+<div class="frame" id="frame">
   <div class="top">
-    <div class="title">Racing GPS Speedometer</div>
-    <div class="pill">0–240 km/h</div>
+    <div class="title">Osama Meter</div>
+    <div class="subtitle">دراجة عبد الحليم</div>
   </div>
 
   <div class="gauge">
-    <div class="bezel"></div>
-    <div class="track"></div>
     <div class="arc"></div>
-    <div class="ticks" id="ticks"></div>
-
     <div class="needle" id="needle"></div>
-    <div class="hub"></div>
-
     <div class="inner">
-      <div class="readout">
+      <div>
         <div class="speed" id="speed">0</div>
+        <div class="gear" id="gear">G1</div>
         <div class="unit">km/h</div>
-        <div class="info">
-          <span>Accuracy <b id="acc">—</b>m</span>
-          <span>GPS <b id="fix">—</b></span>
-        </div>
       </div>
     </div>
-
     <div class="cut"></div>
   </div>
 
-  <div class="bottom">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="dot" id="dot"></span>
-      <span id="status">Waiting for GPS…</span>
-    </div>
-    <button id="unitBtn">Toggle Units</button>
+  <div class="controls">
+    <button id="hazardBtn">Hazard OFF</button>
+    <button id="wakeBtn">Screen ON</button>
   </div>
 </div>
 
 <script>
+/* ================== CONFIG ================== */
 const START=225, SWEEP=270;
-let unit="km/h", maxSpeed=240;
 const MAX_ACC=30, STOP_KMH=2, STOP_MS=1500, EMA=0.22;
 
+/* ================== STATE ================== */
 let last=null, ema=0, stopSince=null;
+let hazard=false, torchTrack=null, hazardTimer=null;
+let audioCtx=null, beepOsc=null;
 
+/* ================== ELEMENTS ================== */
 const needle=document.getElementById("needle");
 const speedTxt=document.getElementById("speed");
-const accTxt=document.getElementById("acc");
-const fixTxt=document.getElementById("fix");
-const dot=document.getElementById("dot");
-const statusTxt=document.getElementById("status");
+const gearTxt=document.getElementById("gear");
+const frame=document.getElementById("frame");
 
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+/* ================== HELPERS ================== */
 const rad=d=>d*Math.PI/180;
 const hav=(a,b,c,d)=>{
   const R=6371000;
@@ -296,26 +182,67 @@ const hav=(a,b,c,d)=>{
   ));
 };
 
+function gearFromSpeed(v){
+  if(v<=10) return "G1";
+  if(v<=15) return "G2";
+  if(v<=20) return "G3";
+  if(v<=25) return "G4";
+  return "G5";
+}
+
 function setGauge(v){
-  v=clamp(v,0,maxSpeed);
   speedTxt.textContent=Math.round(v);
+  gearTxt.textContent=gearFromSpeed(v);
   needle.style.transform=
-    `translateY(-50%) rotate(${START+(v/maxSpeed)*SWEEP}deg)`;
+    `translateY(-50%) rotate(${START+(v/60)*SWEEP}deg)`;
 }
 
-function setStatus(t,c){
-  statusTxt.textContent=t;
-  dot.className="dot "+c;
+/* ================== BEEP ================== */
+function startBeep(){
+  if(audioCtx) return;
+  audioCtx=new AudioContext();
+  beepOsc=audioCtx.createOscillator();
+  beepOsc.frequency.value=900;
+  beepOsc.connect(audioCtx.destination);
+  beepOsc.start();
+}
+function stopBeep(){
+  if(beepOsc){beepOsc.stop();beepOsc=null;}
+  audioCtx=null;
 }
 
+/* ================== FLASHLIGHT ================== */
+async function toggleHazard(){
+  hazard=!hazard;
+  document.getElementById("hazardBtn").textContent=hazard?"Hazard ON":"Hazard OFF";
+  if(!hazard){
+    clearInterval(hazardTimer);
+    if(torchTrack) torchTrack.applyConstraints({advanced:[{torch:false}]});
+    return;
+  }
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  torchTrack=stream.getVideoTracks()[0];
+  hazardTimer=setInterval(()=>{
+    torchTrack.applyConstraints({advanced:[{torch:true}]});
+    setTimeout(()=>torchTrack.applyConstraints({advanced:[{torch:false}]}),300);
+  },600);
+}
+
+/* ================== WAKE LOCK ================== */
+let wakeLock=null;
+async function keepAwake(){
+  if("wakeLock" in navigator){
+    wakeLock=await navigator.wakeLock.request("screen");
+  }
+}
+document.getElementById("wakeBtn").onclick=keepAwake;
+document.getElementById("hazardBtn").onclick=toggleHazard;
+
+/* ================== GPS ================== */
 navigator.geolocation.watchPosition(p=>{
   const {latitude,longitude,accuracy,speed}=p.coords;
   const t=p.timestamp;
-
-  accTxt.textContent=accuracy?Math.round(accuracy):"—";
-  fixTxt.textContent="OK";
-
-  if(accuracy>MAX_ACC) return setStatus("GPS noisy","warn");
+  if(accuracy>MAX_ACC) return;
 
   let kmh=null;
   if(speed!=null) kmh=speed*3.6;
@@ -324,28 +251,23 @@ navigator.geolocation.watchPosition(p=>{
     const dt=(t-last.t)/1000;
     if(dt>0) kmh=(d/dt)*3.6;
   }
-
   last={lat:latitude,lon:longitude,t};
-
   if(kmh==null) return;
 
   ema=EMA*kmh+(1-EMA)*ema;
 
-  if(ema<STOP_KMH){
-    if(!stopSince) stopSince=t;
-    if(t-stopSince>STOP_MS) ema=0;
-  } else stopSince=null;
+  if(ema>25){
+    frame.classList.add("hid");
+    startBeep();
+  }else{
+    frame.classList.remove("hid");
+    stopBeep();
+  }
 
-  setGauge(unit==="km/h"?ema:ema*0.621371);
-  setStatus("GPS active","ok");
+  setGauge(ema);
 },
-()=>setStatus("GPS error","bad"),
+()=>{},
 {enableHighAccuracy:true,maximumAge:250,timeout:8000});
-
-document.getElementById("unitBtn").onclick=()=>{
-  unit=unit==="km/h"?"mph":"km/h";
-  maxSpeed=unit==="km/h"?240:160;
-};
 </script>
 </body>
 </html>
