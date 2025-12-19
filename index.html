@@ -1,577 +1,326 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Racing GPS Speedometer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Racing GPS Speedometer</title>
 
-  <style>
-    :root{
-      --bg:#000;
-      --panel:#05060a;
-      --ring:#0f1220;
-      --text:#eaf0ff;
-      --muted:rgba(234,240,255,.65);
+<style>
+:root{
+  --bg:#000;
+  --panel:#050505;
+  --text:#f2f6ff;
+  --muted:#9aa3b2;
+  --green:#1cff9a;
+  --blue:#4da3ff;
+  --red:#ff2a4f;
+  --amber:#ffd166;
+}
 
-      --g1:#29ff9a;
-      --g2:#6ea8ff;
-      --g3:#ff2f66;
+*{box-sizing:border-box}
+html,body{height:100%}
 
-      --glow1: rgba(41,255,154,.20);
-      --glow2: rgba(110,168,255,.22);
-      --glow3: rgba(255,47,102,.20);
-    }
+body{
+  margin:0;
+  background:#000;
+  color:var(--text);
+  font-family:"Orbitron",system-ui,Segoe UI,Roboto,Arial;
+  display:grid;
+  place-items:center;
+}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      background:
-        radial-gradient(900px 500px at 50% 25%, rgba(110,168,255,.12), transparent 60%),
-        radial-gradient(700px 420px at 20% 70%, rgba(41,255,154,.10), transparent 62%),
-        radial-gradient(700px 420px at 80% 70%, rgba(255,47,102,.10), transparent 62%),
-        linear-gradient(180deg, #000 0%, #000 100%);
-      color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      display:grid;
-      place-items:center;
-      overflow:hidden;
-    }
+/* FRAME */
+.frame{
+  width:min(560px,96vw);
+  padding:14px;
+  border-radius:16px;
+  background:
+    repeating-linear-gradient(
+      45deg,#0b0b0b,#0b0b0b 6px,#101010 6px,#101010 12px
+    );
+  border:2px solid #1a1a1a;
+  box-shadow:0 25px 60px rgba(0,0,0,.9);
+}
 
-    .frame{
-      width:min(560px, 94vw);
-      padding:18px;
-      border-radius:22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow: 0 30px 90px rgba(0,0,0,.75);
-      backdrop-filter: blur(10px);
-    }
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.title{
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:1.2px;
+}
+.pill{
+  font-size:12px;
+  padding:5px 10px;
+  border:1px solid #222;
+  background:#000;
+  color:var(--muted);
+}
 
-    .top{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:baseline;
-      margin-bottom:12px;
-    }
-    .title{
-      font-weight:800;
-      letter-spacing:.6px;
-      font-size:13px;
-      text-transform:uppercase;
-      opacity:.92;
-    }
-    .pill{
-      font-size:12px;
-      color:var(--muted);
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.35);
-    }
+/* GAUGE */
+.gauge{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  display:grid;
+  place-items:center;
+}
+.bezel{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:radial-gradient(circle,#111 0%,#000 65%);
+  border:6px solid #1c1c1c;
+}
+.track{
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  background:
+    repeating-linear-gradient(
+      45deg,#0c0c0c,#0c0c0c 4px,#111 4px,#111 8px
+    );
+  border:3px solid #151515;
+}
+.arc{
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  background:
+    conic-gradient(from 225deg,
+      var(--green) 0deg,
+      var(--blue) 160deg,
+      var(--red) 260deg,
+      transparent 0deg);
+  mask:radial-gradient(circle,transparent 64%,black 65%);
+}
+.cut{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 108%,#000 57%,transparent 59%);
+}
 
-    /* Gauge */
-    .gauge{
-      width:min(520px, 90vw);
-      aspect-ratio:1/1;
-      margin:0 auto;
-      position:relative;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-    }
+/* TICKS */
+.ticks{position:absolute;inset:0}
+.tick{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform-origin:0% 50%;
+}
+.tick .line{height:3px;background:#cfd6ff}
+.tick.minor .line{width:10px;opacity:.35}
+.tick.major .line{width:22px}
+.tick .label{
+  position:absolute;
+  left:32px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  font-weight:700;
+}
 
-    .bezel{
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,.16), transparent 38%),
-        radial-gradient(circle at 50% 60%, rgba(0,0,0,.55), rgba(0,0,0,.92) 65%),
-        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:
-        inset 0 0 40px rgba(0,0,0,.75),
-        0 0 80px rgba(0,0,0,.65);
-    }
+/* NEEDLE */
+.needle{
+  position:absolute;
+  width:48%;
+  height:5px;
+  left:50%;
+  top:50%;
+  transform-origin:0% 50%;
+  transform:translateY(-50%) rotate(225deg);
+  background:linear-gradient(90deg,#fff,#ff2a4f 85%);
+}
+.hub{
+  position:absolute;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#000;
+  border:3px solid #444;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
 
-    .track{
-      position:absolute;
-      inset:9%;
-      border-radius:50%;
-      background: conic-gradient(from 225deg, rgba(255,255,255,.12) 0 270deg, transparent 0);
-      mask: radial-gradient(circle, transparent 60%, #000 61%);
-      -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%);
-    }
+/* CENTER */
+.inner{
+  position:absolute;
+  inset:20%;
+  border-radius:50%;
+  background:#000;
+  border:2px solid #1b1b1b;
+  display:grid;
+  place-items:center;
+}
+.speed{
+  font-size:68px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.unit{
+  font-size:12px;
+  letter-spacing:1.4px;
+  color:var(--muted);
+}
+.info{
+  display:flex;
+  gap:10px;
+  font-size:11px;
+  color:#aab2c8;
+}
+.info span{
+  padding:4px 6px;
+  border:1px solid #222;
+}
 
-    /* “Racing” arc: layered glow */
-    .arc{
-      position:absolute;
-      inset:9%;
-      border-radius:50%;
-      background: conic-gradient(from 225deg,
-        var(--g1) 0deg,
-        var(--g2) 150deg,
-        var(--g3) 250deg,
-        transparent 0deg
-      );
-      mask: radial-gradient(circle, transparent 60%, #000 61%);
-      -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%);
-      filter:
-        drop-shadow(0 0 10px var(--glow1))
-        drop-shadow(0 0 14px var(--glow2))
-        drop-shadow(0 0 18px var(--glow3));
-      opacity:.95;
-    }
+/* BOTTOM */
+.bottom{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;background:#333;
+}
+.dot.ok{background:var(--green)}
+.dot.warn{background:var(--amber)}
+.dot.bad{background:var(--red)}
 
-    /* Mask bottom quarter to make a speedometer */
-    .cut{
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      background: radial-gradient(circle at 50% 108%, #000 57%, transparent 59%);
-      pointer-events:none;
-      opacity:1;
-    }
-
-    .ticks{
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      pointer-events:none;
-    }
-    .tick{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform-origin: 0% 50%;
-      opacity:.92;
-    }
-    .tick .line{
-      height:2px;
-      border-radius:2px;
-      background: rgba(234,240,255,.62);
-    }
-    .tick.minor .line{ width:12px; opacity:.35; }
-    .tick.major .line{ width:22px; opacity:.85; }
-    .tick .label{
-      position:absolute;
-      left:30px;
-      top:50%;
-      transform: translateY(-50%);
-      font-size:12px;
-      color: rgba(234,240,255,.78);
-      letter-spacing:.2px;
-    }
-
-    .needle{
-      position:absolute;
-      width:46%;
-      height:4px;
-      left:50%;
-      top:50%;
-      transform-origin: 0% 50%;
-      transform: translateY(-50%) rotate(225deg);
-      transition: transform 90ms linear;
-      filter: drop-shadow(0 0 12px rgba(0,0,0,.7));
-      border-radius:999px;
-      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95) 14%, rgba(255,47,102,.98) 82%, rgba(255,47,102,1));
-    }
-
-    .hub{
-      position:absolute;
-      width:18px; height:18px;
-      border-radius:50%;
-      left:50%; top:50%;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(255,255,255,.2) 35%, rgba(0,0,0,.92) 72%);
-      border: 1px solid rgba(255,255,255,.18);
-      box-shadow: 0 0 22px rgba(110,168,255,.25);
-    }
-
-    .inner{
-      position:absolute;
-      inset:18%;
-      border-radius:50%;
-      background: linear-gradient(180deg, rgba(5,6,10,.92), rgba(0,0,0,.94));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow: inset 0 0 30px rgba(0,0,0,.75);
-      display:grid;
-      place-items:center;
-    }
-
-    .readout{
-      text-align:center;
-      transform: translateY(10px);
-      display:grid;
-      gap:6px;
-    }
-    .speed{
-      font-size:62px;
-      line-height:1;
-      letter-spacing:-1px;
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 18px rgba(110,168,255,.18);
-    }
-    .unit{
-      font-size:12px;
-      letter-spacing:.7px;
-      text-transform:uppercase;
-      color:var(--muted);
-    }
-    .info{
-      display:flex;
-      justify-content:center;
-      gap:14px;
-      flex-wrap:wrap;
-      font-size:12px;
-      color: rgba(234,240,255,.72);
-      margin-top:2px;
-    }
-    .info span{
-      padding:5px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.35);
-    }
-
-    .bottom{
-      margin-top:14px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      color:var(--muted);
-      font-size:12px;
-    }
-
-    .status{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-height:18px;
-    }
-    .dot{
-      width:8px; height:8px;
-      border-radius:50%;
-      background: rgba(255,255,255,.25);
-      box-shadow:none;
-    }
-    .dot.ok{
-      background: var(--g1);
-      box-shadow: 0 0 16px var(--glow1);
-    }
-    .dot.warn{
-      background: #ffd166;
-      box-shadow: 0 0 16px rgba(255,209,102,.22);
-    }
-    .dot.bad{
-      background: var(--g3);
-      box-shadow: 0 0 16px var(--glow3);
-    }
-
-    button{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding:9px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:700;
-      letter-spacing:.2px;
-    }
-    button:hover{ background: rgba(255,255,255,.10); }
-    button:active{ transform: translateY(1px); }
-
-    @media (prefers-reduced-motion: reduce){
-      .needle{ transition:none; }
-    }
-  </style>
+button{
+  background:#000;
+  border:2px solid #222;
+  color:#fff;
+  padding:8px 12px;
+  font-weight:800;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
-  <div class="frame">
-    <div class="top">
-      <div class="title">Racing GPS Speedometer</div>
-      <div class="pill"><span id="rangeOut">0–240</span> km/h</div>
-    </div>
-
-    <div class="gauge" aria-label="Speedometer">
-      <div class="bezel"></div>
-      <div class="track"></div>
-      <div class="arc"></div>
-
-      <div class="ticks" id="ticks"></div>
-
-      <div class="needle" id="needle"></div>
-      <div class="hub"></div>
-
-      <div class="inner">
-        <div class="readout">
-          <div class="speed" id="speed">0</div>
-          <div class="unit" id="unit">km/h</div>
-          <div class="info">
-            <span>Accuracy: <b id="acc">—</b> m</span>
-            <span>Fix: <b id="fix">—</b></span>
-            <span>Source: <b id="src">—</b></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="cut"></div>
-    </div>
-
-    <div class="bottom">
-      <div class="status">
-        <span class="dot" id="dot"></span>
-        <span id="status">Waiting for GPS permission…</span>
-      </div>
-      <button id="unitBtn" type="button">Toggle Units</button>
-    </div>
+<div class="frame">
+  <div class="top">
+    <div class="title">Racing GPS Speedometer</div>
+    <div class="pill">0–240 km/h</div>
   </div>
 
-  <script>
-    // ---------------------------
-    // Gauge config
-    // ---------------------------
-    const START_DEG = 225;
-    const SWEEP_DEG = 270;
+  <div class="gauge">
+    <div class="bezel"></div>
+    <div class="track"></div>
+    <div class="arc"></div>
+    <div class="ticks" id="ticks"></div>
+    <div class="needle" id="needle"></div>
+    <div class="hub"></div>
 
-    let unit = "km/h";           // or "mph"
-    let maxSpeed = 240;          // displayed max (changes with unit)
-    const MIN_SPEED = 0;
+    <div class="inner">
+      <div style="text-align:center">
+        <div class="speed" id="speed">0</div>
+        <div class="unit">km/h</div>
+        <div class="info">
+          <span>Accuracy <b id="acc">—</b>m</span>
+          <span>GPS <b id="fix">—</b></span>
+        </div>
+      </div>
+    </div>
+    <div class="cut"></div>
+  </div>
 
-    // ---------------------------
-    // Anti-noise config (tuneable)
-    // ---------------------------
-    const MAX_ACCURACY_M = 30;       // ignore fixes worse than this (meters)
-    const MIN_DT_S = 0.25;           // ignore too-fast updates
-    const EMA_ALPHA = 0.22;          // smoothing: 0.15–0.30 typically good
-    const STOP_SPEED_KMH = 2.0;      // below this we consider "stopping"
-    const STOP_HOLD_MS = 1400;       // must stay slow for this long to snap to 0
-    const MAX_ACCEL_KMH_PER_S = 35;  // reject absurd jump (km/h per second)
+  <div class="bottom">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="dot" id="dot"></span>
+      <span id="status">Waiting for GPS…</span>
+    </div>
+    <button id="unitBtn">Toggle Units</button>
+  </div>
+</div>
 
-    // ---------------------------
-    // Elements
-    // ---------------------------
-    const needle = document.getElementById("needle");
-    const speedEl = document.getElementById("speed");
-    const unitEl = document.getElementById("unit");
-    const statusEl = document.getElementById("status");
-    const dotEl = document.getElementById("dot");
-    const ticksEl = document.getElementById("ticks");
-    const accEl = document.getElementById("acc");
-    const fixEl = document.getElementById("fix");
-    const srcEl = document.getElementById("src");
-    const rangeOut = document.getElementById("rangeOut");
+<script>
+/* ===== CONFIG ===== */
+const START=225, SWEEP=270;
+let unit="km/h", maxSpeed=240;
+const MAX_ACC=30, STOP_KMH=2, STOP_MS=1500, EMA=0.22;
 
-    // ---------------------------
-    // State
-    // ---------------------------
-    let last = null;                 // {lat, lon, tMs}
-    let emaSpeedKmh = 0;
-    let stopCandidateSinceMs = null; // for stop hysteresis
-    let watchId = null;
+/* ===== STATE ===== */
+let last=null, ema=0, stopSince=null;
 
-    // ---------------------------
-    // Math helpers
-    // ---------------------------
-    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-    const toRad = (d) => d * Math.PI / 180;
+/* ===== ELEMENTS ===== */
+const needle=speedEl=document.getElementById("needle");
+const speedTxt=document.getElementById("speed");
+const accTxt=document.getElementById("acc");
+const fixTxt=document.getElementById("fix");
+const dot=document.getElementById("dot");
+const statusTxt=document.getElementById("status");
 
-    function haversineMeters(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
+/* ===== HELPERS ===== */
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const rad=d=>d*Math.PI/180;
+const hav=(a,b,c,d)=>{
+  const R=6371000;
+  const dLat=rad(c-a), dLon=rad(d-b);
+  return 2*R*Math.asin(Math.sqrt(
+    Math.sin(dLat/2)**2+
+    Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)**2
+  ));
+};
 
-    function kmhToMph(kmh){ return kmh * 0.621371; }
-    function mphToKmh(mph){ return mph / 0.621371; }
+function setGauge(v){
+  v=clamp(v,0,maxSpeed);
+  speedTxt.textContent=Math.round(v);
+  needle.style.transform=`translateY(-50%) rotate(${START+(v/maxSpeed)*SWEEP}deg)`;
+}
 
-    // ---------------------------
-    // UI: gauge + ticks
-    // ---------------------------
-    function valueToAngle(v) {
-      const t = (clamp(v, MIN_SPEED, maxSpeed) - MIN_SPEED) / (maxSpeed - MIN_SPEED || 1);
-      return START_DEG + t * SWEEP_DEG;
-    }
+function setStatus(t,c){
+  statusTxt.textContent=t;
+  dot.className="dot "+c;
+}
 
-    function setGauge(displaySpeed) {
-      displaySpeed = clamp(displaySpeed, MIN_SPEED, maxSpeed);
-      speedEl.textContent = String(Math.round(displaySpeed));
-      unitEl.textContent = unit;
-      const angle = valueToAngle(displaySpeed);
-      needle.style.transform = `translateY(-50%) rotate(${angle}deg)`;
-    }
+/* ===== GPS ===== */
+navigator.geolocation.watchPosition(p=>{
+  const {latitude,longitude,accuracy,speed}=p.coords;
+  const t=p.timestamp;
 
-    function rebuildTicks() {
-      ticksEl.innerHTML = "";
+  accTxt.textContent=accuracy?Math.round(accuracy):"—";
+  fixTxt.textContent="OK";
 
-      // Choose steps based on range
-      const major = (unit === "km/h") ? 20 : 10;
-      const minor = major / 2;
+  if(accuracy>MAX_ACC) return setStatus("GPS noisy","warn");
 
-      for (let v = 0; v <= maxSpeed; v += minor) {
-        const isMajor = (v % major === 0);
-        const tick = document.createElement("div");
-        tick.className = "tick " + (isMajor ? "major" : "minor");
-        const ang = valueToAngle(v);
-        tick.style.transform = `translateY(-50%) rotate(${ang}deg) translateX(58%)`;
+  let kmh=null;
+  if(speed!=null) kmh=speed*3.6;
+  else if(last){
+    const d=hav(last.lat,last.lon,latitude,longitude);
+    const dt=(t-last.t)/1000;
+    if(dt>0) kmh=(d/dt)*3.6;
+  }
 
-        const line = document.createElement("div");
-        line.className = "line";
-        tick.appendChild(line);
+  last={lat:latitude,lon:longitude,t};
 
-        if (isMajor) {
-          const label = document.createElement("div");
-          label.className = "label";
-          label.textContent = String(v);
-          tick.appendChild(label);
-        }
+  if(kmh==null) return;
 
-        ticksEl.appendChild(tick);
-      }
+  ema=EMA*kmh+(1-EMA)*ema;
 
-      rangeOut.textContent = `0–${maxSpeed}`;
-    }
+  if(ema<STOP_KMH){
+    if(!stopSince) stopSince=t;
+    if(t-stopSince>STOP_MS) ema=0;
+  } else stopSince=null;
 
-    function setStatus(kind, text) {
-      statusEl.textContent = text;
-      dotEl.className = "dot " + kind;
-    }
+  setGauge(unit==="km/h"?ema:ema*0.621371);
+  setStatus("GPS active","ok");
+},
+()=>setStatus("GPS error","bad"),
+{enableHighAccuracy:true,maximumAge:250,timeout:8000});
 
-    // ---------------------------
-    // Speed pipeline (anti-noise)
-    // ---------------------------
-    function updateSpeedFromFix(pos) {
-      const { latitude, longitude, accuracy, speed } = pos.coords;
-      const tMs = pos.timestamp;
-
-      accEl.textContent = accuracy ? Math.round(accuracy) : "—";
-      fixEl.textContent = (latitude && longitude) ? "OK" : "—";
-
-      // Reject very inaccurate fixes
-      if (accuracy && accuracy > MAX_ACCURACY_M) {
-        setStatus("warn", `GPS noisy (accuracy ${Math.round(accuracy)}m). Waiting for better fix…`);
-        srcEl.textContent = "filtered";
-        return;
-      }
-
-      // If device provides speed, prefer it (usually smoother)
-      let rawKmh = null;
-      if (typeof speed === "number" && isFinite(speed) && speed >= 0) {
-        rawKmh = speed * 3.6;
-        srcEl.textContent = "coords.speed";
-      }
-
-      // Otherwise derive from distance/time
-      if (rawKmh === null) {
-        if (last) {
-          const dtS = (tMs - last.tMs) / 1000;
-          if (dtS < MIN_DT_S) return;
-
-          const dM = haversineMeters(last.lat, last.lon, latitude, longitude);
-          rawKmh = (dM / dtS) * 3.6;
-          srcEl.textContent = "Δdistance/Δtime";
-        } else {
-          last = { lat: latitude, lon: longitude, tMs };
-          setStatus("warn", "Acquiring initial GPS fix…");
-          srcEl.textContent = "—";
-          return;
-        }
-      }
-
-      // Update last position
-      last = { lat: latitude, lon: longitude, tMs };
-
-      // Reject absurd acceleration spikes (GPS teleport)
-      const dtS2 = last && pos.timestamp && last.tMs ? 0.001 : 1; // fallback; real accel check below uses stored time window
-      // Use previous ema as baseline for accel check
-      const accel = Math.abs(rawKmh - emaSpeedKmh); // km/h delta per sample
-      // Approx accel per second: delta / assumed update interval, estimate from typical 1s if unknown
-      // We do better: if we have previous fix time, we already updated last; so store dt before updating:
-      // To keep code simple, apply a conservative check:
-      if (accel > MAX_ACCEL_KMH_PER_S * 1.2) {
-        setStatus("warn", "GPS jump filtered.");
-        srcEl.textContent = "filtered";
-        return;
-      }
-
-      // EMA smoothing
-      emaSpeedKmh = EMA_ALPHA * rawKmh + (1 - EMA_ALPHA) * emaSpeedKmh;
-
-      // Stop hysteresis: snap to zero after staying slow for a bit
-      if (emaSpeedKmh < STOP_SPEED_KMH) {
-        if (stopCandidateSinceMs === null) stopCandidateSinceMs = tMs;
-        const held = tMs - stopCandidateSinceMs;
-        if (held >= STOP_HOLD_MS) {
-          emaSpeedKmh = 0;
-        }
-      } else {
-        stopCandidateSinceMs = null;
-      }
-
-      // Convert to display unit
-      const display = (unit === "km/h") ? emaSpeedKmh : kmhToMph(emaSpeedKmh);
-
-      setGauge(display);
-      setStatus("ok", "GPS active");
-    }
-
-    // ---------------------------
-    // Start/Stop watch
-    // ---------------------------
-    function startWatch() {
-      if (!("geolocation" in navigator)) {
-        setStatus("bad", "Geolocation not supported on this device.");
-        return;
-      }
-
-      setStatus("warn", "Requesting GPS permission…");
-
-      watchId = navigator.geolocation.watchPosition(
-        updateSpeedFromFix,
-        (err) => {
-          console.error(err);
-          setStatus("bad", "GPS error. Check permission / signal.");
-          fixEl.textContent = "ERR";
-          srcEl.textContent = "—";
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 250,
-          timeout: 8000
-        }
-      );
-    }
-
-    // ---------------------------
-    // Units toggle
-    // ---------------------------
-    document.getElementById("unitBtn").addEventListener("click", () => {
-      if (unit === "km/h") {
-        unit = "mph";
-        maxSpeed = 160; // typical sporty mph range
-      } else {
-        unit = "km/h";
-        maxSpeed = 240;
-      }
-      rebuildTicks();
-      // Redraw with current speed
-      const display = (unit === "km/h") ? emaSpeedKmh : kmhToMph(emaSpeedKmh);
-      setGauge(display);
-    });
-
-    // Init
-    rebuildTicks();
-    setGauge(0);
-    startWatch();
-  </script>
+/* ===== UNITS ===== */
+document.getElementById("unitBtn").onclick=()=>{
+  unit=unit==="km/h"?"mph":"km/h";
+  maxSpeed=unit==="km/h"?240:160;
+};
+</script>
 </body>
 </html>
