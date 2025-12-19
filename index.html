@@ -8,7 +8,6 @@
 <style>
 :root{
   --bg:#000;
-  --panel:#050505;
   --text:#f2f6ff;
   --muted:#9aa3b2;
   --green:#1cff9a;
@@ -29,7 +28,7 @@ body{
   place-items:center;
 }
 
-/* FRAME */
+/* ================= FRAME ================= */
 .frame{
   width:min(560px,96vw);
   padding:14px;
@@ -61,7 +60,7 @@ body{
   color:var(--muted);
 }
 
-/* GAUGE */
+/* ================= GAUGE ================= */
 .gauge{
   position:relative;
   width:100%;
@@ -69,13 +68,16 @@ body{
   display:grid;
   place-items:center;
 }
+
 .bezel{
   position:absolute;
   inset:0;
   border-radius:50%;
   background:radial-gradient(circle,#111 0%,#000 65%);
   border:6px solid #1c1c1c;
+  z-index:0;
 }
+
 .track{
   position:absolute;
   inset:8%;
@@ -85,7 +87,9 @@ body{
       45deg,#0c0c0c,#0c0c0c 4px,#111 4px,#111 8px
     );
   border:3px solid #151515;
+  z-index:1;
 }
+
 .arc{
   position:absolute;
   inset:8%;
@@ -97,25 +101,37 @@ body{
       var(--red) 260deg,
       transparent 0deg);
   mask:radial-gradient(circle,transparent 64%,black 65%);
+  -webkit-mask:radial-gradient(circle,transparent 64%,black 65%);
+  z-index:2;
 }
+
 .cut{
   position:absolute;
   inset:0;
   border-radius:50%;
   background:radial-gradient(circle at 50% 108%,#000 57%,transparent 59%);
+  z-index:3;
 }
 
-/* TICKS */
-.ticks{position:absolute;inset:0}
+/* ================= TICKS ================= */
+.ticks{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+}
+
 .tick{
   position:absolute;
   left:50%;
   top:50%;
   transform-origin:0% 50%;
 }
+
 .tick .line{height:3px;background:#cfd6ff}
 .tick.minor .line{width:10px;opacity:.35}
 .tick.major .line{width:22px}
+
 .tick .label{
   position:absolute;
   left:32px;
@@ -125,7 +141,7 @@ body{
   font-weight:700;
 }
 
-/* NEEDLE */
+/* ================= NEEDLE ================= */
 .needle{
   position:absolute;
   width:48%;
@@ -135,7 +151,9 @@ body{
   transform-origin:0% 50%;
   transform:translateY(-50%) rotate(225deg);
   background:linear-gradient(90deg,#fff,#ff2a4f 85%);
+  z-index:6;
 }
+
 .hub{
   position:absolute;
   width:22px;
@@ -146,40 +164,50 @@ body{
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
+  z-index:7;
 }
 
-/* CENTER */
+/* ================= CENTER ================= */
 .inner{
   position:absolute;
-  inset:20%;
+  inset:24%;
   border-radius:50%;
   background:#000;
   border:2px solid #1b1b1b;
   display:grid;
   place-items:center;
+  z-index:5;
 }
+
+.readout{text-align:center}
+
 .speed{
-  font-size:68px;
+  font-size:64px;
   font-weight:900;
   letter-spacing:1px;
+  position:relative;
+  z-index:7;
 }
+
 .unit{
   font-size:12px;
   letter-spacing:1.4px;
   color:var(--muted);
 }
+
 .info{
   display:flex;
   gap:10px;
   font-size:11px;
   color:#aab2c8;
+  justify-content:center;
 }
 .info span{
   padding:4px 6px;
   border:1px solid #222;
 }
 
-/* BOTTOM */
+/* ================= BOTTOM ================= */
 .bottom{
   margin-top:12px;
   display:flex;
@@ -216,11 +244,12 @@ button{
     <div class="track"></div>
     <div class="arc"></div>
     <div class="ticks" id="ticks"></div>
+
     <div class="needle" id="needle"></div>
     <div class="hub"></div>
 
     <div class="inner">
-      <div style="text-align:center">
+      <div class="readout">
         <div class="speed" id="speed">0</div>
         <div class="unit">km/h</div>
         <div class="info">
@@ -229,6 +258,7 @@ button{
         </div>
       </div>
     </div>
+
     <div class="cut"></div>
   </div>
 
@@ -242,23 +272,19 @@ button{
 </div>
 
 <script>
-/* ===== CONFIG ===== */
 const START=225, SWEEP=270;
 let unit="km/h", maxSpeed=240;
 const MAX_ACC=30, STOP_KMH=2, STOP_MS=1500, EMA=0.22;
 
-/* ===== STATE ===== */
 let last=null, ema=0, stopSince=null;
 
-/* ===== ELEMENTS ===== */
-const needle=speedEl=document.getElementById("needle");
+const needle=document.getElementById("needle");
 const speedTxt=document.getElementById("speed");
 const accTxt=document.getElementById("acc");
 const fixTxt=document.getElementById("fix");
 const dot=document.getElementById("dot");
 const statusTxt=document.getElementById("status");
 
-/* ===== HELPERS ===== */
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const rad=d=>d*Math.PI/180;
 const hav=(a,b,c,d)=>{
@@ -273,7 +299,8 @@ const hav=(a,b,c,d)=>{
 function setGauge(v){
   v=clamp(v,0,maxSpeed);
   speedTxt.textContent=Math.round(v);
-  needle.style.transform=`translateY(-50%) rotate(${START+(v/maxSpeed)*SWEEP}deg)`;
+  needle.style.transform=
+    `translateY(-50%) rotate(${START+(v/maxSpeed)*SWEEP}deg)`;
 }
 
 function setStatus(t,c){
@@ -281,7 +308,6 @@ function setStatus(t,c){
   dot.className="dot "+c;
 }
 
-/* ===== GPS ===== */
 navigator.geolocation.watchPosition(p=>{
   const {latitude,longitude,accuracy,speed}=p.coords;
   const t=p.timestamp;
@@ -316,7 +342,6 @@ navigator.geolocation.watchPosition(p=>{
 ()=>setStatus("GPS error","bad"),
 {enableHighAccuracy:true,maximumAge:250,timeout:8000});
 
-/* ===== UNITS ===== */
 document.getElementById("unitBtn").onclick=()=>{
   unit=unit==="km/h"?"mph":"km/h";
   maxSpeed=unit==="km/h"?240:160;
