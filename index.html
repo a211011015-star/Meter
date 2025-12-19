@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Osama Meter – Classic GSAP Speedometer</title>
+<title>Osama Meter</title>
 
 <!-- ================= REQUIRED LIBRARIES ================= -->
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -11,13 +11,8 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/TweenLite.min.js"></script>
 
 <style>
-/* ================= BASE ================= */
-*{ box-sizing:border-box; }
-
-html,body{
-  height:100%;
-  margin:0;
-}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
 
 body{
   background:#000;
@@ -28,18 +23,35 @@ body{
   align-items:center;
 }
 
-/* ================= LAYOUT ================= */
-#wrapper{
+#hud{
+  width:100%;
+  max-width:420px;
+  height:100vh;
   display:flex;
-  gap:60px;
+  flex-direction:column;
+  justify-content:center;
   align-items:center;
+  position:relative;
 }
 
-/* ================= GAUGE ================= */
+#hud.hid{
+  box-shadow:0 0 30px #ff2a4f, 0 0 80px rgba(255,42,79,.8);
+}
+
+/* ===== HEADER ===== */
+#header{
+  position:absolute;
+  top:30px;
+  text-align:center;
+}
+#header h1{margin:0;font-size:18px}
+#header p{margin:4px 0 0;color:#aaa}
+
+/* ===== GAUGE ===== */
 #gauge{
   position:relative;
-  width:320px;
-  height:320px;
+  width:300px;
+  height:300px;
 }
 
 #circle{
@@ -47,36 +59,30 @@ body{
   inset:0;
   border-radius:50%;
   border:10px solid #1a1a1a;
-  background:#000;
 }
 
-/* Numbers */
 #numbers{
   position:absolute;
   inset:0;
   font-size:12px;
-  color:#fff;
 }
 
 #numbers span{
   position:absolute;
   left:50%;
   top:50%;
-  transform-origin:50% 150px;
+  transform-origin:50% 145px;
 }
 
-/* Unit label */
 #mi-km{
   position:absolute;
-  bottom:42px;
+  bottom:50px;
   width:100%;
   text-align:center;
   font-size:14px;
   color:#aaa;
-  letter-spacing:1px;
 }
 
-/* Needle */
 #needle{
   position:absolute;
   width:4px;
@@ -88,7 +94,6 @@ body{
   transform:rotate(-120deg);
 }
 
-/* Center hub */
 #needle::after{
   content:"";
   position:absolute;
@@ -100,126 +105,201 @@ body{
   background:#fff;
 }
 
-/* ================= INPUT PANEL ================= */
-#left{
-  min-width:200px;
+/* ===== CENTER INFO ===== */
+#center{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
-#left div{
-  margin-bottom:12px;
+#speed{
+  font-size:96px;
+  font-weight:900;
 }
 
-label{
-  display:inline-block;
-  width:90px;
-}
-
-input{
-  width:90px;
-  padding:5px;
-  background:#000;
-  border:1px solid #444;
-  color:#fff;
-}
-
-#errmsg{
+#gear-label{
   margin-top:10px;
+  color:#aaa;
+  font-size:14px;
+}
+#gear{
+  font-size:36px;
   color:#ff2a4f;
-  font-size:12px;
+  font-weight:900;
+}
+
+/* ===== BATTERY ===== */
+#battery{
+  position:absolute;
+  right:20px;
+  height:120px;
+  width:16px;
+  border:2px solid #fff;
+  padding:2px;
+}
+#battery-level{
+  width:100%;
+  background:#fff;
+  height:50%;
+}
+
+/* ===== CONTROLS ===== */
+#controls{
+  position:absolute;
+  bottom:30px;
+  display:flex;
+  gap:20px;
+}
+
+button{
+  background:#000;
+  border:2px solid #333;
+  color:#fff;
+  padding:8px 14px;
+  font-weight:700;
 }
 </style>
 </head>
 
 <body>
 
-<div id="wrapper">
+<div id="hud">
+  <div id="header">
+    <h1>Osama Meter</h1>
+    <p>دراجة عبد الحليم</p>
+  </div>
 
-  <!-- ================= SPEEDOMETER ================= -->
   <div id="gauge">
     <div id="circle"></div>
     <div id="numbers"></div>
-    <div id="mi-km">MPH</div>
+    <div id="mi-km">KM/H</div>
     <div id="needle"></div>
+
+    <div id="center">
+      <div id="speed">0</div>
+      <div id="gear-label">GEAR</div>
+      <div id="gear">1</div>
+    </div>
   </div>
 
-  <!-- ================= INPUTS ================= -->
-  <div id="left">
-    <div>
-      <label for="miles">Miles:</label>
-      <input type="text" id="miles">
-    </div>
-    <div>
-      <label for="kilometers">Kilometers:</label>
-      <input type="text" id="kilometers">
-    </div>
-    <p id="errmsg"></p>
+  <div id="battery">
+    <div id="battery-level"></div>
   </div>
 
+  <div id="controls">
+    <button id="hazardBtn">Hazard</button>
+    <button id="wakeBtn">Screen ON</button>
+  </div>
 </div>
 
 <script>
 /* ================= CONFIG ================= */
-var MAX_MPH = 120;
+var MAX_KMH = 60;
 var START_ANGLE = -120;
 var END_ANGLE = 120;
+var EMA = 0.25;
+
+/* ================= STATE ================= */
+var emaSpeed = 0;
+var lastPos = null;
+var audioCtx = null;
+var osc = null;
+var hazardOn = false;
+var torchTrack = null;
 
 /* ================= BUILD SCALE ================= */
-for(var i = 0; i <= MAX_MPH; i += 10){
-  var angle = START_ANGLE + (i / MAX_MPH) * (END_ANGLE - START_ANGLE);
-  var mark = $("<span>"+i+"</span>");
-
-  mark.css({
+for(var i=0;i<=MAX_KMH;i+=10){
+  var angle = START_ANGLE + (i/MAX_KMH)*(END_ANGLE-START_ANGLE);
+  var s = $("<span>"+i+"</span>");
+  s.css({
     transform:
       "rotate("+angle+"deg) translate(0,-145px) rotate("+(-angle)+"deg)"
   });
-
-  $("#numbers").append(mark);
+  $("#numbers").append(s);
 }
 
-/* ================= NEEDLE CONTROL ================= */
-function setSpeed(mph){
-  var angle = START_ANGLE + (mph / MAX_MPH) * (END_ANGLE - START_ANGLE);
+/* ================= HELPERS ================= */
+function gearFromSpeed(v){
+  if(v<=10) return 1;
+  if(v<=15) return 2;
+  if(v<=20) return 3;
+  if(v<=25) return 4;
+  return 5;
+}
 
-  TweenLite.to("#needle", 0.9, {
-    rotation: angle,
-    ease: Power2.easeOut
+function setNeedle(kmh){
+  var a = START_ANGLE + (kmh/MAX_KMH)*(END_ANGLE-START_ANGLE);
+  TweenLite.to("#needle",0.8,{rotation:a,ease:Power2.easeOut});
+}
+
+/* ================= BEEP ================= */
+function startBeep(){
+  if(audioCtx) return;
+  audioCtx=new AudioContext();
+  osc=audioCtx.createOscillator();
+  osc.frequency.value=900;
+  osc.connect(audioCtx.destination);
+  osc.start();
+}
+function stopBeep(){
+  if(osc){osc.stop();osc=null;}
+  audioCtx=null;
+}
+
+/* ================= GPS ================= */
+navigator.geolocation.watchPosition(p=>{
+  var kmh = p.coords.speed!=null ? p.coords.speed*3.6 : 0;
+  emaSpeed = EMA*kmh + (1-EMA)*emaSpeed;
+
+  $("#speed").text(Math.round(emaSpeed));
+  $("#gear").text(gearFromSpeed(emaSpeed));
+  setNeedle(emaSpeed);
+
+  if(emaSpeed>25){
+    $("#hud").addClass("hid");
+    startBeep();
+  }else{
+    $("#hud").removeClass("hid");
+    stopBeep();
+  }
+},{},{enableHighAccuracy:true});
+
+/* ================= BATTERY ================= */
+if(navigator.getBattery){
+  navigator.getBattery().then(b=>{
+    function update(){
+      $("#battery-level").css("height",(b.level*100)+"%");
+    }
+    update();
+    b.addEventListener("levelchange",update);
   });
 }
 
-/* ================= INPUT LOGIC ================= */
-$("#miles").on("input", function(){
-  var mph = parseFloat(this.value);
-
-  if(isNaN(mph) || mph < 0 || mph > MAX_MPH){
-    $("#errmsg").text("Miles must be between 0 and " + MAX_MPH);
-    return;
+/* ================= WAKE LOCK ================= */
+$("#wakeBtn").on("click",async()=>{
+  if("wakeLock" in navigator){
+    await navigator.wakeLock.request("screen");
   }
-
-  $("#errmsg").text("");
-  $("#kilometers").val((mph * 1.60934).toFixed(2));
-  $("#mi-km").text("MPH");
-  setSpeed(mph);
 });
 
-$("#kilometers").on("input", function(){
-  var km = parseFloat(this.value);
-
-  if(isNaN(km) || km < 0){
-    $("#errmsg").text("Enter a valid kilometer value");
+/* ================= HAZARD FLASH ================= */
+$("#hazardBtn").on("click",async()=>{
+  hazardOn=!hazardOn;
+  if(!hazardOn){
+    if(torchTrack) torchTrack.applyConstraints({advanced:[{torch:false}]});
     return;
   }
-
-  var mph = km / 1.60934;
-
-  if(mph > MAX_MPH){
-    $("#errmsg").text("Speed exceeds gauge limit");
-    return;
-  }
-
-  $("#errmsg").text("");
-  $("#miles").val(mph.toFixed(2));
-  $("#mi-km").text("KM/H");
-  setSpeed(mph);
+  const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  torchTrack = stream.getVideoTracks()[0];
+  setInterval(()=>{
+    if(hazardOn){
+      torchTrack.applyConstraints({advanced:[{torch:true}]});
+      setTimeout(()=>torchTrack.applyConstraints({advanced:[{torch:false}]}),300);
+    }
+  },600);
 });
 </script>
 
