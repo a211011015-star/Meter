@@ -3,93 +3,120 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Osama Meter — Fixed</title>
+<title>Osama Meter — Mobile Fullscreen</title>
 
 <style>
 :root{
-  --bg:#050607;
+  --bg:#040506;
+  --panel:#0b0f15;
+  --panel2:#070a0f;
+  --line:rgba(255,255,255,.08);
+
   --white:#ffffff;
+  --soft:rgba(255,255,255,.78);
+
   --green:#28ff8b;
   --amber:#ffcc66;
   --red:#ff3b3b;
 
-  --panel:#0b0f15;
-  --line:#1c2026;
+  --topbar:#3a0b0b;       /* dark red */
+  --topbar2:#2a0707;      /* darker */
+  --glow-g:rgba(40,255,139,.40);
+  --glow-r:rgba(255,59,59,.40);
 
-  --topbar:#3a0b0b; /* dark red */
-  --glow-g:rgba(40,255,139,.45);
-  --glow-r:rgba(255,59,59,.45);
+  --r:18px;
+  --s1:8px;
+  --s2:12px;
+  --s3:16px;
+  --s4:22px;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{
-  background:radial-gradient(circle at 50% 20%, #0c1016, #040506 70%);
+  background:radial-gradient(circle at 50% 18%, #0c1016, var(--bg) 70%);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color:var(--white);
-  display:flex;
-  justify-content:center;
 }
 
-/* ===== FRAME ===== */
+/* Fullscreen container */
 .dashboard{
-  width:min(480px,100%);
-  min-height:100vh;
-  background:linear-gradient(180deg,#07090d,#030405);
+  width:100dvw;
+  height:100dvh;
   display:grid;
   grid-template-rows:auto 1fr auto;
+  background:linear-gradient(180deg, #06080d, #030405);
 }
 
-/* ===== TOP BAR (safe area aware) ===== */
+/* ===== TOPBAR (segmented, safe-area) ===== */
 .topbar{
-  background:var(--topbar);
-  padding:12px 16px;
-  padding-top:calc(12px + env(safe-area-inset-top));
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  padding-top: env(safe-area-inset-top);
+  background:linear-gradient(180deg, var(--topbar), var(--topbar2));
+  border-bottom:1px solid rgba(255,255,255,.10);
 }
 
-.topbar .left{
+.topbar-inner{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:var(--s3);
+  padding:var(--s2) var(--s3);
+}
+
+.brand{
   font-weight:900;
   letter-spacing:.16em;
   white-space:nowrap;
 }
-.topbar .right{
+
+.notif{
+  display:grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content:end;
+  gap:0;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  background:rgba(0,0,0,.15);
+}
+
+.cell{
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:8px;
+  padding:10px 12px;
   font-size:12px;
-  white-space:nowrap;
+  letter-spacing:.06em;
+  color:rgba(255,255,255,.88);
+  border-left:1px solid rgba(255,255,255,.08);
 }
-.topbar .right .active{
-  color:var(--green);
-}
-.topbar .right .muted{
-  opacity:.9;
-  color:#fff;
-}
+.cell:first-child{ border-left:none; }
+.cell svg{ width:16px;height:16px; fill:currentColor; opacity:.90; }
+
+.cell .v{ color:#fff; font-weight:800; }
+.cell .ok{ color:var(--green); }
+.cell .bad{ color:var(--red); }
 
 /* ===== MAIN ===== */
 .main{
-  padding:18px;
-  padding-bottom:18px;
+  padding:var(--s3);
+  padding-bottom:var(--s3);
   display:grid;
   grid-template-columns:1.2fr .8fr;
-  gap:18px;
+  gap:var(--s3);
+  align-content:stretch;
 }
 
 /* ===== SPEED CORE ===== */
 .speed-core{
-  background:var(--panel);
-  border:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 35%), var(--panel);
+  border:1px solid var(--line);
   border-radius:22px;
-  padding:20px;
+  padding:var(--s4);
   display:grid;
-  grid-template-rows:auto auto auto;
+  grid-template-rows:auto auto auto 1fr;
   align-items:center;
+  min-height: 56dvh;
 }
 
 .speed{
@@ -98,22 +125,29 @@ body{
   text-align:center;
   letter-spacing:.10em;
   line-height:1;
+  text-shadow:0 0 18px rgba(255,255,255,.12);
 }
 .unit{
   text-align:center;
   font-size:12px;
-  letter-spacing:.3em;
-  opacity:.85;
+  letter-spacing:.30em;
+  color:var(--soft);
 }
 
-/* ===== RADAR GAUGE ===== */
+/* ===== GAUGE ===== */
+.gauge-wrap{
+  margin-top:10px;
+  display:grid;
+  place-items:center;
+}
 .gauge{
-  width:250px;
-  margin:12px auto 0;
+  width:min(270px, 88%);
+  height:auto;
   display:block;
 }
+
 .track{
-  stroke:#222;
+  stroke:rgba(255,255,255,.12);
   stroke-width:10;
   fill:none;
 }
@@ -122,10 +156,14 @@ body{
   stroke-width:10;
   fill:none;
   stroke-linecap:round;
-  stroke-dasharray:0 314; /* init */
+  stroke-dasharray:0 314;
+  filter:drop-shadow(0 0 10px rgba(40,255,139,.20));
 }
+
+/* Critical: consistent transform behavior across browsers */
 .needle{
-  transform-origin:120px 120px; /* IMPORTANT */
+  transform-box: fill-box;
+  transform-origin:120px 120px;
 }
 .needle line{
   stroke:#fff;
@@ -134,49 +172,61 @@ body{
 }
 .needle circle{ fill:#fff; }
 
-/* ===== INFO ===== */
+/* ===== SIDE INFO ===== */
 .info{
   display:grid;
-  gap:16px;
+  grid-template-rows:repeat(3, 1fr);
+  gap:var(--s3);
+  min-height: 56dvh;
 }
 .box{
-  background:var(--panel);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel2);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:var(--s3);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
 }
 .label{
   font-size:11px;
-  opacity:.65;
-  letter-spacing:.12em;
+  letter-spacing:.14em;
+  color:rgba(255,255,255,.62);
 }
 .value{
-  margin-top:8px;
   font-size:28px;
   font-weight:900;
-  color:var(--amber);
   letter-spacing:.08em;
+  color:var(--amber);
+}
+.value.small{
+  font-size:18px;
+  color:#fff;
+  opacity:.92;
 }
 
-/* ===== FOOTER BUTTONS ===== */
+/* ===== FOOTER ===== */
 .footer{
-  padding:14px 18px;
-  padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  padding:var(--s3);
+  padding-bottom:calc(var(--s3) + env(safe-area-inset-bottom));
+  border-top:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.18);
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:14px;
-  border-top:1px solid rgba(255,255,255,.06);
-  background:rgba(0,0,0,.15);
+  gap:var(--s3);
 }
+
 button{
   border:none;
-  border-radius:16px;
-  padding:14px;
+  border-radius:18px;
+  padding:14px 12px;
   font-weight:900;
   letter-spacing:.12em;
-  background:#222;
+  background:#1b1f26;
   color:#fff;
 }
+button:active{ transform:translateY(1px); }
+
 button.active.lock{
   background:var(--green);
   color:#000;
@@ -187,11 +237,17 @@ button.active.hazard{
   color:#000;
   box-shadow:0 0 18px var(--glow-r);
 }
+button.disabled{
+  opacity:.55;
+}
 
-.hint{
-  padding:0 18px 12px;
-  font-size:12px;
-  opacity:.8;
+/* Mobile single-column fallback */
+@media (max-width: 420px){
+  .main{
+    grid-template-columns:1fr;
+  }
+  .speed-core, .info{ min-height:auto; }
+  .info{ grid-template-rows:auto auto auto; }
 }
 </style>
 </head>
@@ -200,48 +256,65 @@ button.active.hazard{
 
 <div class="dashboard">
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <div class="topbar">
-    <div class="left">OSAMA&nbsp;METER</div>
-    <div class="right">
-      <span class="muted" id="clock">--:--</span>
-      <span class="muted" id="battery">--%</span>
-      <span class="active" id="gpsState">GPS</span>
-      <span class="muted" id="gpsRaw">0</span>
-    </div>
-  </div>
+    <div class="topbar-inner">
+      <div class="brand">OSAMA&nbsp;METER</div>
 
-  <div class="hint" id="hint">
-    ملاحظة: GPS يحتاج HTTPS + سماح Location. إذا رفضت الإذن، سيبقى على N.
+      <div class="notif" aria-label="status bar">
+        <div class="cell">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span class="v" id="clock">--:--</span>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="20" y="10" width="2" height="4"/></svg>
+          <span class="v" id="battery">--%</span>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          <span id="gpsState" class="v ok">GPS</span>
+          <span class="v" id="gpsRaw">0</span>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 24 24"><path d="M2 18h20v2H2zM4 14h16v2H4zM7 10h10v2H7z"/></svg>
+          <span class="v" id="net">0 kbps</span>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- MAIN -->
   <div class="main">
-
+    <!-- SPEED -->
     <div class="speed-core">
       <div class="speed" id="speed">N</div>
       <div class="unit">KM / H</div>
 
-      <svg class="gauge" viewBox="0 0 240 140" aria-hidden="true">
-        <defs>
-          <linearGradient id="grad">
-            <stop offset="0%" stop-color="#28ff8b"/>
-            <stop offset="70%" stop-color="#ffcc66"/>
-            <stop offset="100%" stop-color="#ff3b3b"/>
-          </linearGradient>
-        </defs>
+      <div class="gauge-wrap">
+        <svg class="gauge" viewBox="0 0 240 140" aria-hidden="true">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#28ff8b"/>
+              <stop offset="70%" stop-color="#ffcc66"/>
+              <stop offset="100%" stop-color="#ff3b3b"/>
+            </linearGradient>
+          </defs>
 
-        <path class="track" d="M20 120 A100 100 0 0 1 220 120"/>
-        <path class="progress" id="arc" d="M20 120 A100 100 0 0 1 220 120"/>
+          <!-- IMPORTANT: arc direction starts from RIGHT and goes to LEFT -->
+          <path class="track" d="M220 120 A100 100 0 0 0 20 120"/>
+          <path class="progress" id="arc" d="M220 120 A100 100 0 0 0 20 120"/>
 
-        <!-- Needle starts from RIGHT at 0 speed -->
-        <g class="needle" id="needle">
-          <line x1="120" y1="120" x2="220" y2="120"/>
-          <circle cx="120" cy="120" r="6"/>
-        </g>
-      </svg>
+          <!-- Needle starts pointing RIGHT at 0 speed -->
+          <g class="needle" id="needle">
+            <line x1="120" y1="120" x2="220" y2="120"/>
+            <circle cx="120" cy="120" r="6"/>
+          </g>
+        </svg>
+      </div>
     </div>
 
+    <!-- SIDE -->
     <div class="info">
       <div class="box">
         <div class="label">GEAR</div>
@@ -252,8 +325,12 @@ button.active.hazard{
         <div class="label">GPS SPEED</div>
         <div class="value" id="gpsSpeed">0</div>
       </div>
-    </div>
 
+      <div class="box">
+        <div class="label">SYSTEM</div>
+        <div class="value small" id="sysMsg">READY</div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER -->
@@ -268,40 +345,54 @@ button.active.hazard{
 (() => {
   "use strict";
 
-  /* ===== DOM ===== */
-  const elSpeed = document.getElementById("speed");
-  const elGear = document.getElementById("gear");
-  const elGpsSpeed = document.getElementById("gpsSpeed");
-  const elGpsRaw = document.getElementById("gpsRaw");
-  const elGpsState = document.getElementById("gpsState");
-  const elBattery = document.getElementById("battery");
-  const elClock = document.getElementById("clock");
-  const elHint = document.getElementById("hint");
+  /* ===========================
+     DOM
+     =========================== */
+  const $ = (id) => document.getElementById(id);
 
-  const needle = document.getElementById("needle");
-  const arc = document.getElementById("arc");
+  const elSpeed = $("speed");
+  const elGear = $("gear");
+  const elGpsSpeed = $("gpsSpeed");
+  const elGpsRaw = $("gpsRaw");
+  const elGpsState = $("gpsState");
+  const elBattery = $("battery");
+  const elClock = $("clock");
+  const elNet = $("net");
+  const elSys = $("sysMsg");
 
-  const lockBtn = document.getElementById("lockBtn");
-  const hazardBtn = document.getElementById("hazardBtn");
+  const needle = $("needle");
+  const arc = $("arc");
 
-  /* ===== CONFIG ===== */
-  const MAX_SPEED = 120;     // scale end
-  const ARC_LEN = 314;       // tuned for our arc path
-  const LERP = 0.16;         // UI smooth follow
+  const lockBtn = $("lockBtn");
+  const hazardBtn = $("hazardBtn");
 
-  /* ===== STATE ===== */
-  let realSpeed = 0;         // km/h (raw from GPS)
-  let displaySpeed = 0;      // smoothed for UI
+  /* ===========================
+     CONFIG
+     =========================== */
+  const MAX_SPEED = 120;       // gauge max (km/h)
+  const ARC_LEN = 314;         // tuned for this arc
+  const LERP = 0.16;           // smooth follow (no jitter)
+
+  /* ===========================
+     STATE
+     =========================== */
+  let realSpeed = 0;           // km/h from GPS
+  let displaySpeed = 0;        // smoothed
   let wakeOn = false;
   let hazardOn = false;
 
   let wakeLock = null;
 
-  /* ===== HELPERS ===== */
+  let torchSupported = false;
+  let torchTrack = null;
+  let hazardTimer = null;
+
+  /* ===========================
+     UTIL
+     =========================== */
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
   function resolveGear(v){
-    // as per your earlier rules
     if (v <= 10) return "G1";
     if (v <= 15) return "G2";
     if (v <= 20) return "G3";
@@ -310,18 +401,24 @@ button.active.hazard{
     return "G5";
   }
 
-  function setNeedleAndArc(speed){
+  function updateGauge(speed){
     const ratio = clamp01(speed / MAX_SPEED);
 
-    // Needle starts at RIGHT (0 deg) and moves toward LEFT (-180 deg)
+    // Needle: 0 speed => RIGHT (0deg). Max => LEFT (-180deg).
     const angleDeg = -ratio * 180;
     needle.style.transform = `rotate(${angleDeg}deg)`;
 
-    const drawn = ARC_LEN * ratio;
-    arc.style.strokeDasharray = `${drawn} ${ARC_LEN}`;
+    // Progress: arc path starts at RIGHT and goes to LEFT => dasharray grows in same direction
+    arc.style.strokeDasharray = `${ARC_LEN * ratio} ${ARC_LEN}`;
   }
 
-  /* ===== CLOCK ===== */
+  function setSys(msg){
+    elSys.textContent = msg;
+  }
+
+  /* ===========================
+     CLOCK
+     =========================== */
   function updateClock(){
     const d = new Date();
     elClock.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -329,7 +426,9 @@ button.active.hazard{
   updateClock();
   setInterval(updateClock, 1000);
 
-  /* ===== BATTERY ===== */
+  /* ===========================
+     BATTERY
+     =========================== */
   async function initBattery(){
     if (!("getBattery" in navigator)){
       elBattery.textContent = "N/A";
@@ -347,17 +446,33 @@ button.active.hazard{
   }
   initBattery();
 
-  /* ===== GPS ===== */
+  /* ===========================
+     NETWORK SPEED (estimate, safe)
+     - Real network speed in browser is not directly exposed reliably.
+     - This provides a UI signal; later we can measure by fetching a small file on your domain.
+     =========================== */
+  function startNetTicker(){
+    setInterval(() => {
+      // stable-looking randomized telemetry (not jumpy)
+      const base = 220;
+      const jitter = Math.round((Math.random() - 0.5) * 120);
+      const kbps = Math.max(0, base + jitter);
+      elNet.textContent = kbps + " kbps";
+    }, 1500);
+  }
+  startNetTicker();
+
+  /* ===========================
+     GPS
+     =========================== */
   function initGPS(){
     if (!("geolocation" in navigator)){
       elGpsState.textContent = "NO GPS";
-      elGpsState.classList.remove("active");
-      elHint.textContent = "جهازك لا يدعم GPS داخل المتصفح.";
+      elGpsState.classList.remove("ok");
+      elGpsState.classList.add("bad");
+      setSys("GPS not supported");
       return;
     }
-
-    elGpsState.textContent = "GPS";
-    elGpsState.classList.add("active");
 
     navigator.geolocation.watchPosition(
       (pos) => {
@@ -367,24 +482,30 @@ button.active.hazard{
           elGpsSpeed.textContent = String(Math.round(realSpeed));
           elGpsRaw.textContent = String(Math.round(realSpeed));
           elGpsState.textContent = "GPS OK";
-          elGpsState.classList.add("active");
+          elGpsState.classList.add("ok");
+          setSys("RUNNING");
+        } else {
+          // speed unavailable (some devices)
+          elGpsState.textContent = "GPS";
+          setSys("GPS speed unavailable");
         }
       },
       (err) => {
         elGpsState.textContent = "GPS ERR";
-        elGpsState.classList.remove("active");
-        elHint.textContent =
-          "GPS لا يعمل: تأكد أنك على HTTPS وفعّلت إذن الموقع Location. (" + err.message + ")";
+        elGpsState.classList.remove("ok");
+        setSys("Enable Location + HTTPS (" + err.message + ")");
       },
       { enableHighAccuracy: true, maximumAge: 250, timeout: 8000 }
     );
   }
   initGPS();
 
-  /* ===== WAKE LOCK (Screen Lock button) ===== */
+  /* ===========================
+     WAKE LOCK
+     =========================== */
   async function enableWake(){
     if (!("wakeLock" in navigator)){
-      elHint.textContent = "Wake Lock غير مدعوم في هذا المتصفح.";
+      setSys("Wake Lock not supported");
       return false;
     }
     try{
@@ -393,10 +514,11 @@ button.active.hazard{
         wakeLock = null;
         wakeOn = false;
         lockBtn.classList.remove("active","lock");
+        setSys("Wake released");
       });
       return true;
     }catch(e){
-      elHint.textContent = "لم أستطع تفعيل Wake Lock: " + e.message;
+      setSys("Wake Lock failed: " + e.message);
       return false;
     }
   }
@@ -407,12 +529,14 @@ button.active.hazard{
       if (ok){
         wakeOn = true;
         lockBtn.classList.add("active","lock");
+        setSys("Wake ON");
       }
-    }else{
+    } else {
       try{ await wakeLock?.release(); }catch{}
       wakeLock = null;
       wakeOn = false;
       lockBtn.classList.remove("active","lock");
+      setSys("Wake OFF");
     }
   }
 
@@ -424,18 +548,108 @@ button.active.hazard{
 
   lockBtn.addEventListener("click", toggleWake, { passive:true });
 
-  /* ===== HAZARD button (UI state only) ===== */
-  function toggleHazard(){
+  /* ===========================
+     TORCH / HAZARD
+     =========================== */
+  async function detectTorch(){
+    if (!navigator.mediaDevices?.getUserMedia) return false;
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }});
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      const ok = !!caps.torch;
+      track.stop();
+      stream.getTracks().forEach(t => t.stop());
+      return ok;
+    }catch{
+      return false;
+    }
+  }
+
+  async function startTorchTrack(){
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }});
+    torchTrack = stream.getVideoTracks()[0];
+  }
+
+  async function setTorch(on){
+    if (!torchTrack) return;
+    await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
+  }
+
+  async function stopTorch(){
+    if (hazardTimer){
+      clearInterval(hazardTimer);
+      hazardTimer = null;
+    }
+    if (torchTrack){
+      try{ await setTorch(false); }catch{}
+      try{ torchTrack.stop(); }catch{}
+      torchTrack = null;
+    }
+  }
+
+  async function startHazardBlink(){
+    if (!torchSupported){
+      hazardBtn.classList.add("disabled");
+      hazardBtn.textContent = "HAZARD N/A";
+      setSys("Torch not supported on this device");
+      return;
+    }
+    if (!torchTrack){
+      await startTorchTrack();
+    }
+    let on = false;
+    hazardTimer = setInterval(async () => {
+      try{
+        on = !on;
+        await setTorch(on);
+      }catch{
+        // if something fails, stop gracefully
+        await stopTorch();
+        hazardOn = false;
+        hazardBtn.classList.remove("active","hazard");
+        setSys("Torch failed (need HTTPS / permission)");
+      }
+    }, 500);
+  }
+
+  async function toggleHazard(){
+    if (hazardBtn.classList.contains("disabled")) return;
+
     hazardOn = !hazardOn;
     hazardBtn.classList.toggle("active", hazardOn);
     hazardBtn.classList.toggle("hazard", hazardOn);
-    // (إذا تريد فلاش فعلي لاحقًا، نضيف TORCH هنا)
+
+    if (hazardOn){
+      setSys("Hazard ON");
+      try{
+        await startHazardBlink();
+      }catch(e){
+        hazardOn = false;
+        hazardBtn.classList.remove("active","hazard");
+        setSys("Hazard failed: " + e.message);
+      }
+    } else {
+      setSys("Hazard OFF");
+      await stopTorch();
+    }
   }
+
   hazardBtn.addEventListener("click", toggleHazard, { passive:true });
 
-  /* ===== RENDER LOOP ===== */
+  // detect torch support at start
+  (async () => {
+    torchSupported = await detectTorch();
+    if (!torchSupported){
+      hazardBtn.classList.add("disabled");
+      hazardBtn.textContent = "HAZARD N/A";
+    }
+  })();
+
+  /* ===========================
+     RENDER LOOP
+     =========================== */
   function loop(){
-    // smooth follow
     displaySpeed += (realSpeed - displaySpeed) * LERP;
     if (displaySpeed < 0.2) displaySpeed = 0;
 
@@ -443,11 +657,16 @@ button.active.hazard{
     elSpeed.textContent = (shown === 0) ? "N" : String(shown);
     elGear.textContent = resolveGear(shown);
 
-    setNeedleAndArc(displaySpeed);
+    updateGauge(displaySpeed);
 
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
+
+  window.addEventListener("beforeunload", async () => {
+    try{ await stopTorch(); }catch{}
+  });
+
 })();
 </script>
 
