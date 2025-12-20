@@ -4,741 +4,194 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#040506">
-<meta name="description" content="OSAMA METER - عداد سرعة متقدم مع واجهة مستخدم ذكية">
-<title>Osama Meter — عداد السرعة المتقدم</title>
+<title>Osama Meter</title>
 
 <style>
-:root {
-  /* نظام ألوان محسّن */
-  --bg-primary: #040506;
-  --bg-secondary: #0b0f15;
-  --bg-tertiary: #070a0f;
-  --bg-surface: rgba(11, 15, 21, 0.8);
-  
-  /* ألوان الحالة */
-  --color-success: #28ff8b;
-  --color-warning: #ffcc66;
-  --color-danger: #ff3b3b;
-  --color-info: #3b82f6;
-  
-  /* النص */
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.75);
-  --text-tertiary: rgba(255, 255, 255, 0.6);
-  --text-disabled: rgba(255, 255, 255, 0.4);
-  
-  /* الحدود والتأثيرات */
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-medium: rgba(255, 255, 255, 0.15);
-  --border-heavy: rgba(255, 255, 255, 0.2);
-  
-  /* الظلال */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  
-  /* نصف القطر */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
-  
-  /* التباعد */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 20px;
-  --spacing-2xl: 24px;
-  --spacing-3xl: 32px;
-  
-  /* التباين والشفافية */
-  --overlay-light: rgba(255, 255, 255, 0.05);
-  --overlay-medium: rgba(255, 255, 255, 0.1);
-  --overlay-heavy: rgba(0, 0, 0, 0.2);
-  
-  /* الرسوم المتحركة */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 350ms ease;
-  
-  /* أحجام الخطوط */
-  --font-xs: 11px;
-  --font-sm: 13px;
-  --font-base: 14px;
-  --font-lg: 16px;
-  --font-xl: 18px;
-  --font-2xl: 24px;
-  --font-3xl: 32px;
-  --font-4xl: 48px;
-  --font-5xl: 64px;
-  --font-6xl: 88px;
+/* === (نفس ألوانك – لم أعبث بها) === */
+:root{
+  --bg:#040506;
+  --panel:#0b0f15;
+  --border:rgba(255,255,255,.12);
+  --white:#fff;
+  --soft:rgba(255,255,255,.7);
+  --green:#28ff8b;
+  --amber:#ffcc66;
+  --red:#ff3b3b;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* RESET */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(circle at 50% 10%, #0c1016, var(--bg) 70%);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--white);
 }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
+/* ===== DASHBOARD ===== */
+.dashboard{
+  height:100dvh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
 }
 
-body {
-  background: radial-gradient(
-    circle at 50% 10%,
-    rgba(12, 16, 22, 0.95) 0%,
-    var(--bg-primary) 70%
-  );
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: var(--text-primary);
-  font-size: var(--font-base);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  touch-action: manipulation;
+/* ===== TOPBAR ===== */
+.topbar{
+  padding-top:env(safe-area-inset-top);
+  background:linear-gradient(180deg,#3a0b0b,#260707);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:12px;
+  padding:6px 14px;
+}
+.brand{
+  font-weight:900;
+  letter-spacing:.14em;
+  font-size:13px;
 }
 
-/* تخصيص شريط التمرير */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* STATUS BAR */
+.status{
+  display:flex;
+  justify-content:flex-end;
+  gap:0;
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.status-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  font-size:11px;
+  border-left:1px solid var(--border);
+}
+.status-item:first-child{border-left:none}
+.status-item svg{width:14px;height:14px;fill:currentColor}
+.ok{color:var(--green)}
+
+/* ===== HAZARD FLASH ===== */
+.hazard-on .topbar{
+  animation:hazardFlash .8s infinite;
+}
+@keyframes hazardFlash{
+  0%,100%{background:linear-gradient(180deg,#3a0b0b,#260707)}
+  50%{background:linear-gradient(180deg,#ff3b3b,#7a1010)}
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-tertiary);
-  border-radius: 4px;
+/* ===== MAIN ===== */
+.main{
+  padding:16px;
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:16px;
 }
-
-::-webkit-scrollbar-thumb {
-  background: var(--overlay-medium);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--overlay-heavy);
-}
-
-/* ===== LAYOUT ===== */
-.dashboard {
-  width: 100dvw;
-  height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  background: linear-gradient(
-    180deg,
-    rgba(6, 8, 13, 0.95) 0%,
-    var(--bg-primary) 100%
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* ===== TOP BAR ===== */
-.topbar {
-  padding-top: env(safe-area-inset-top);
-  background: linear-gradient(
-    180deg,
-    rgba(58, 11, 11, 0.9) 0%,
-    rgba(38, 7, 7, 0.9) 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-light);
-  position: relative;
-  z-index: 100;
-}
-
-.topbar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 59, 59, 0.3) 50%,
-    transparent 100%
-  );
-}
-
-.topbar-inner {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.brand {
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  font-size: var(--font-sm);
-  color: var(--text-primary);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.brand::before {
-  content: '⚡';
-  font-size: var(--font-lg);
-}
-
-.status-bar {
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  justify-content: end;
-  gap: 0;
-  background: var(--overlay-heavy);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-xs);
-  color: var(--text-secondary);
-  border-left: 1px solid var(--border-light);
-  transition: all var(--transition-fast);
-  min-width: 80px;
-  justify-content: center;
-}
-
-.status-item:first-child {
-  border-left: none;
-}
-
-.status-item:hover {
-  background: var(--overlay-light);
-}
-
-.status-item .icon {
-  font-size: var(--font-sm);
-}
-
-.status-item.gps-active .icon {
-  color: var(--color-success);
-}
-
-.status-item.gps-inactive .icon {
-  color: var(--color-danger);
-}
-
-.status-item.network-active .icon {
-  color: var(--color-success);
-}
-
-/* ===== HAZARD EFFECT ===== */
-.hazard-active .topbar {
-  animation: hazardPulse 0.8s infinite;
-  box-shadow: 0 0 30px rgba(255, 59, 59, 0.3);
-}
-
-@keyframes hazardPulse {
-  0%, 100% {
-    background: linear-gradient(
-      180deg,
-      rgba(58, 11, 11, 0.9) 0%,
-      rgba(38, 7, 7, 0.9) 100%
-    );
-  }
-  50% {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 59, 59, 0.8) 0%,
-      rgba(122, 16, 16, 0.8) 100%
-    );
-  }
-}
-
-.hazard-active .hazard-btn {
-  animation: buttonPulse 1s infinite;
-}
-
-@keyframes buttonPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(255, 59, 59, 0);
-  }
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-  padding: var(--spacing-lg);
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: var(--spacing-lg);
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-  overflow: hidden;
+@media(max-width:800px){
+  .main{grid-template-columns:1fr}
 }
 
 /* ===== SPEED CORE ===== */
-.speed-core {
-  background: linear-gradient(
-    180deg,
-    var(--overlay-light) 0%,
-    transparent 100%
-  ), var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-2xl);
-  padding: var(--spacing-3xl);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 
-    var(--shadow-md),
-    inset 0 1px 0 var(--overlay-light);
-  position: relative;
-  overflow: hidden;
+.speed-core{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:24px;
 }
-
-.speed-core::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--overlay-light) 50%,
-    transparent 100%
-  );
+.speed{
+  text-align:center;
+  font-size:72px;
+  font-weight:950;
 }
-
-.speed-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-2xl);
-}
-
-.speed-value {
-  font-size: var(--font-6xl);
-  font-weight: 950;
-  background: linear-gradient(
-    135deg,
-    var(--text-primary) 0%,
-    var(--text-secondary) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  line-height: 1;
-  transition: all var(--transition-normal);
-}
-
-.speed-unit {
-  font-size: var(--font-xs);
-  letter-spacing: 0.3em;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  font-weight: 600;
+.unit{
+  text-align:center;
+  font-size:11px;
+  letter-spacing:.28em;
+  color:var(--soft);
 }
 
 /* ===== GAUGE ===== */
-.gauge-container {
-  display: grid;
-  place-items: center;
-  margin-top: var(--spacing-2xl);
+.gauge-wrap{display:grid;place-items:center;margin-top:16px}
+.gauge{width:min(320px,100%)}
+.track{
+  stroke:rgba(255,255,255,.15);
+  stroke-width:12;
+  fill:none;
+}
+.progress{
+  stroke:url(#grad);
+  stroke-width:12;
+  fill:none;
+  stroke-linecap:round;
+  stroke-dasharray:0 1;
+}
+.needle{
+  transform-origin:160px 150px;
+  transform-box:fill-box;
+}
+.needle line{stroke:#fff;stroke-width:4}
+.needle circle{fill:#fff}
+
+/* ===== INFO ===== */
+.info{
+  display:grid;
+  gap:16px;
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+}
+.label{
+  font-size:11px;
+  color:var(--soft);
+}
+.value{
+  font-size:28px;
+  font-weight:900;
+  color:var(--amber);
 }
 
-.gauge {
-  width: min(320px, 90%);
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+/* DISTANCE RESET */
+.distance-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-
-.gauge-track {
-  stroke: var(--overlay-heavy);
-  stroke-width: 12;
-  fill: none;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.gauge-progress {
-  stroke: url(#speedGradient);
-  stroke-width: 12;
-  fill: none;
-  stroke-linecap: round;
-  stroke-dasharray: 0 1;
-  filter: drop-shadow(0 0 8px rgba(40, 255, 139, 0.3));
-  transition: stroke-dasharray var(--transition-normal);
-}
-
-.gradient-stop-1 {
-  stop-color: var(--color-success);
-  stop-opacity: 1;
-}
-
-.gradient-stop-2 {
-  stop-color: var(--color-warning);
-  stop-opacity: 1;
-}
-
-.gradient-stop-3 {
-  stop-color: var(--color-danger);
-  stop-opacity: 1;
-}
-
-.gauge-needle {
-  transform-box: fill-box;
-  transform-origin: 160px 160px;
-  transition: transform var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.gauge-needle line {
-  stroke: var(--text-primary);
-  stroke-width: 4;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-}
-
-.gauge-needle circle {
-  fill: var(--text-primary);
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-}
-
-.gauge-center {
-  fill: var(--bg-primary);
-  stroke: var(--border-light);
-  stroke-width: 2;
-}
-
-/* ===== SIDEBAR INFO ===== */
-.info-panel {
-  display: grid;
-  gap: var(--spacing-lg);
-  height: fit-content;
-}
-
-.info-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.info-card:hover {
-  border-color: var(--border-heavy);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--overlay-light) 50%,
-    transparent 100%
-  );
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-}
-
-.card-icon {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-warning);
-  font-size: var(--font-lg);
-}
-
-.card-label {
-  font-size: var(--font-xs);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
-}
-
-.card-value {
-  font-size: var(--font-3xl);
-  font-weight: 900;
-  color: var(--color-warning);
-  text-shadow: 0 2px 8px rgba(255, 204, 102, 0.2);
-  line-height: 1.2;
-  transition: all var(--transition-normal);
-}
-
-.gear-display {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: var(--overlay-heavy);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  min-width: 60px;
-  text-align: center;
+.reset-btn{
+  border:none;
+  background:#1b1f26;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:11px;
+  cursor:pointer;
 }
 
 /* ===== FOOTER ===== */
-.footer {
-  padding: var(--spacing-lg);
-  padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border-light);
-  background: var(--overlay-heavy);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+.footer{
+  padding:16px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--border);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
 }
-
-.control-btn {
-  border: none;
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  font-weight: 900;
-  font-size: var(--font-base);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid transparent;
+button{
+  border:none;
+  border-radius:18px;
+  padding:14px;
+  font-weight:900;
+  background:#1b1f26;
+  color:#fff;
 }
-
-.control-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--overlay-light) 50%,
-    transparent 100%
-  );
-}
-
-.control-btn:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-md);
-}
-
-.control-btn:active {
-  transform: translateY(0);
-}
-
-.control-btn.active {
-  background: var(--color-danger);
-  color: #000;
-  border-color: var(--color-danger);
-}
-
-.control-btn.lock-btn::before {
-  content: '🔒';
-}
-
-.control-btn.hazard-btn::before {
-  content: '⚠️';
-}
-
-.control-btn .btn-text {
-  position: relative;
-  z-index: 1;
-}
-
-/* ===== LOADING STATES ===== */
-.loading {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border-light);
-  border-top-color: var(--color-warning);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* ===== TOAST NOTIFICATIONS ===== */
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100%);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md) var(--spacing-lg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  opacity: 0;
-  transition: all var(--transition-normal);
-}
-
-.toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 1024px) {
-  .main {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-xl);
-  }
-  
-  .speed-value {
-    font-size: var(--font-5xl);
-  }
-  
-  .info-panel {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --spacing-lg: 12px;
-    --spacing-xl: 16px;
-    --spacing-2xl: 20px;
-    --spacing-3xl: 24px;
-    
-    --font-4xl: 36px;
-    --font-5xl: 48px;
-    --font-6xl: 64px;
-  }
-  
-  .topbar-inner {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
-  }
-  
-  .status-bar {
-    justify-content: stretch;
-  }
-  
-  .status-item {
-    min-width: auto;
-    justify-content: center;
-  }
-  
-  .speed-core {
-    padding: var(--spacing-xl);
-  }
-  
-  .gauge {
-    width: min(280px, 90%);
-  }
-  
-  .footer {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .info-panel {
-    grid-template-columns: 1fr;
-  }
-  
-  .speed-value {
-    font-size: var(--font-4xl);
-  }
-  
-  .card-value {
-    font-size: var(--font-2xl);
-  }
-  
-  .control-btn {
-    padding: var(--spacing-lg);
-  }
-}
-
-/* ===== DARK MODE SUPPORT ===== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-surface: rgba(11, 15, 21, 0.9);
-    --overlay-heavy: rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* ===== REDUCED MOTION ===== */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  .gauge-needle {
-    transition: none;
-  }
-  
-  .hazard-active .topbar {
-    animation: none;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 59, 59, 0.8) 0%,
-      rgba(122, 16, 16, 0.8) 100%
-    ) !important;
-  }
-}
+button.active.hazard{background:var(--red);color:#000}
+button.active.lock{background:var(--green);color:#000}
 </style>
 </head>
 
@@ -746,544 +199,176 @@ body {
 
 <div class="dashboard" id="dashboard">
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-inner">
-      <div class="brand">OSAMA METER</div>
-      <div class="status-bar">
+      <div class="brand">OSAMA&nbsp;METER</div>
+      <div class="status">
         <div class="status-item">
-          <span class="icon">🕐</span>
+          <!-- CLOCK ICON -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           <span id="clock">--:--</span>
         </div>
         <div class="status-item">
-          <span class="icon">🔋</span>
+          <!-- BATTERY -->
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="20" y="10" width="2" height="4"/></svg>
           <span id="battery">--%</span>
         </div>
-        <div class="status-item gps-active" id="gpsStatus">
-          <span class="icon">📍</span>
-          <span id="gpsSatellites">0</span>
-        </div>
-        <div class="status-item network-active">
-          <span class="icon">📶</span>
-          <span id="networkSpeed">0 kbps</span>
+        <div class="status-item ok">
+          <!-- GPS -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          <span id="gpsSpeed">0</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN -->
   <div class="main">
-    <!-- SPEED CORE -->
     <div class="speed-core">
-      <div class="speed-display">
-        <div class="speed-value" id="speed">0</div>
-        <div class="speed-unit">كم / ساعة</div>
-      </div>
+      <div class="speed" id="speed">0</div>
+      <div class="unit">KM / H</div>
 
-      <div class="gauge-container">
-        <svg class="gauge" viewBox="0 0 320 180" aria-labelledby="gaugeTitle">
-          <title id="gaugeTitle">عداد السرعة</title>
+      <div class="gauge-wrap">
+        <svg class="gauge" viewBox="0 0 320 180">
           <defs>
-            <linearGradient id="speedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop class="gradient-stop-1" offset="0%"/>
-              <stop class="gradient-stop-2" offset="70%"/>
-              <stop class="gradient-stop-3" offset="100%"/>
+            <linearGradient id="grad">
+              <stop offset="0%" stop-color="#28ff8b"/>
+              <stop offset="70%" stop-color="#ffcc66"/>
+              <stop offset="100%" stop-color="#ff3b3b"/>
             </linearGradient>
           </defs>
 
-          <!-- المسار الخلفي -->
-          <path class="gauge-track" pathLength="1"
+          <path class="track" pathLength="1"
             d="M40 150 A120 120 0 0 0 280 150"/>
-          
-          <!-- المسار المتحرك -->
-          <path class="gauge-progress" id="speedArc" pathLength="1"
+          <path class="progress" id="arc" pathLength="1"
             d="M40 150 A120 120 0 0 0 280 150"/>
-          
-          <!-- الإبرة -->
-          <g class="gauge-needle" id="speedNeedle">
+
+          <g class="needle" id="needle">
             <line x1="160" y1="150" x2="40" y2="150"/>
-            <circle class="gauge-center" cx="160" cy="150" r="10"/>
             <circle cx="160" cy="150" r="6"/>
           </g>
         </svg>
       </div>
     </div>
 
-    <!-- INFO PANEL -->
-    <div class="info-panel">
-      <div class="info-card">
-        <div class="card-header">
-          <div class="card-icon">⚙️</div>
-          <div class="card-label">الغيار</div>
-        </div>
-        <div class="card-value">
-          <span class="gear-display" id="gear">N</span>
-        </div>
+    <div class="info">
+      <div class="card">
+        <div class="label">GEAR</div>
+        <div class="value" id="gear">N</div>
       </div>
 
-      <div class="info-card">
-        <div class="card-header">
-          <div class="card-icon">📍</div>
-          <div class="card-label">سرعة GPS</div>
+      <div class="card">
+        <div class="label">DISTANCE</div>
+        <div class="distance-row">
+          <div class="value" id="distance">0.0 km</div>
+          <button class="reset-btn" id="resetDistance">RESET</button>
         </div>
-        <div class="card-value" id="gpsSpeed">0</div>
-      </div>
-
-      <div class="info-card">
-        <div class="card-header">
-          <div class="card-icon">📊</div>
-          <div class="card-label">السرعة القصوى</div>
-        </div>
-        <div class="card-value" id="maxSpeed">0</div>
-      </div>
-
-      <div class="info-card">
-        <div class="card-header">
-          <div class="card-icon">⏱️</div>
-          <div class="card-label">المسافة</div>
-        </div>
-        <div class="card-value" id="distance">0 كم</div>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER CONTROLS -->
+  <!-- FOOTER -->
   <div class="footer">
-    <button class="control-btn lock-btn" id="lockBtn" aria-label="قفل الشاشة">
-      <span class="btn-text">قفل الشاشة</span>
-    </button>
-    <button class="control-btn hazard-btn" id="hazardBtn" aria-label="تفعيل وضع الخطر">
-      <span class="btn-text">وضع الخطر</span>
-    </button>
+    <button id="lockBtn">KEEP SCREEN ON</button>
+    <button id="hazardBtn">HAZARD</button>
   </div>
-
-  <!-- TOAST NOTIFICATION -->
-  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 </div>
 
 <script>
-class Speedometer {
-  constructor() {
-    // DOM Elements
-    this.dashboard = document.getElementById('dashboard');
-    this.speedEl = document.getElementById('speed');
-    this.gearEl = document.getElementById('gear');
-    this.gpsSpeedEl = document.getElementById('gpsSpeed');
-    this.maxSpeedEl = document.getElementById('maxSpeed');
-    this.distanceEl = document.getElementById('distance');
-    this.arc = document.getElementById('speedArc');
-    this.needle = document.getElementById('speedNeedle');
-    this.hazardBtn = document.getElementById('hazardBtn');
-    this.lockBtn = document.getElementById('lockBtn');
-    this.toast = document.getElementById('toast');
-    
-    // GPS Elements
-    this.clockEl = document.getElementById('clock');
-    this.batteryEl = document.getElementById('battery');
-    this.gpsStatusEl = document.getElementById('gpsStatus');
-    this.gpsSatellitesEl = document.getElementById('gpsSatellites');
-    this.networkSpeedEl = document.getElementById('networkSpeed');
-    
-    // Constants
-    this.MAX_SPEED = 120;
-    this.LERP_FACTOR = 0.12;
-    this.HAZARD_SPEED_THRESHOLD = 10;
-    
-    // State
-    this.realSpeed = 0;
-    this.displaySpeed = 0;
-    this.maxSpeed = 0;
-    this.totalDistance = 0;
-    this.lastPosition = null;
-    this.hazardActive = false;
-    this.screenLocked = false;
-    this.gpsActive = false;
-    this.lastUpdate = Date.now();
-    
-    // Performance optimization
-    this.rafId = null;
-    this.updateInterval = null;
-    
-    this.init();
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const dashboard = $("dashboard");
+  const speedEl = $("speed");
+  const gearEl = $("gear");
+  const gpsSpeedEl = $("gpsSpeed");
+  const distanceEl = $("distance");
+  const resetBtn = $("resetDistance");
+  const arc = $("arc");
+  const needle = $("needle");
+  const hazardBtn = $("hazardBtn");
+  const lockBtn = $("lockBtn");
+
+  const MAX = 120;
+  const LERP = 0.14;
+
+  let realSpeed = 0;
+  let displaySpeed = 0;
+  let distance = 0;
+  let lastPos = null;
+  let hazardOn = false;
+  let wakeLock = null;
+
+  function gearFromSpeed(v){
+    if(v === 0) return "N";
+    if(v <= 10) return "G1";
+    if(v <= 20) return "G2";
+    if(v <= 30) return "G3";
+    if(v <= 40) return "G4";
+    return "G5";
   }
 
-  init() {
-    this.setupEventListeners();
-    this.startClock();
-    this.startBatteryMonitor();
-    this.startNetworkMonitor();
-    this.startGPS();
-    this.startAnimationLoop();
-    this.showToast('جاهز للاستخدام', 'success');
+  function updateGauge(v){
+    const r = Math.min(v / MAX, 1);
+    needle.style.transform = `rotate(${r * 180}deg)`;
+    arc.style.strokeDasharray = `${r} 1`;
   }
 
-  setupEventListeners() {
-    // Hazard button with debounce
-    this.hazardBtn.addEventListener('click', () => {
-      this.toggleHazard();
-    });
-
-    // Lock button
-    this.lockBtn.addEventListener('click', () => {
-      this.toggleScreenLock();
-    });
-
-    // Prevent accidental touches
-    document.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    // Handle visibility change
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.pauseUpdates();
-      } else {
-        this.resumeUpdates();
-      }
-    });
-
-    // Handle online/offline
-    window.addEventListener('online', () => {
-      this.showToast('تم استعادة الاتصال', 'success');
-    });
-
-    window.addEventListener('offline', () => {
-      this.showToast('فقدان الاتصال بالشبكة', 'error');
-    });
-  }
-
-  startClock() {
-    const updateClock = () => {
-      const now = new Date();
-      this.clockEl.textContent = now.toLocaleTimeString('ar-SA', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
-    
-    updateClock();
-    setInterval(updateClock, 1000);
-  }
-
-  async startBatteryMonitor() {
-    if ('getBattery' in navigator) {
-      try {
-        const battery = await navigator.getBattery();
-        
-        const updateBattery = () => {
-          const percent = Math.round(battery.level * 100);
-          this.batteryEl.textContent = `${percent}%`;
-          
-          // Update color based on battery level
-          if (percent <= 20) {
-            this.batteryEl.style.color = 'var(--color-danger)';
-          } else if (percent <= 50) {
-            this.batteryEl.style.color = 'var(--color-warning)';
-          } else {
-            this.batteryEl.style.color = 'var(--color-success)';
-          }
-        };
-        
-        updateBattery();
-        battery.addEventListener('levelchange', updateBattery);
-        battery.addEventListener('chargingchange', updateBattery);
-        
-      } catch (error) {
-        this.batteryEl.textContent = '--%';
-      }
-    } else {
-      this.batteryEl.textContent = '--%';
-    }
-  }
-
-  startNetworkMonitor() {
-    if ('connection' in navigator) {
-      const connection = navigator.connection;
-      
-      const updateNetwork = () => {
-        if (connection.downlink) {
-          const speed = Math.round(connection.downlink * 1024);
-          this.networkSpeedEl.textContent = `${speed} kbps`;
-        }
-      };
-      
-      updateNetwork();
-      connection.addEventListener('change', updateNetwork);
-    }
-  }
-
-  startGPS() {
-    if (!navigator.geolocation) {
-      this.showToast('GPS غير مدعوم في هذا المتصفح', 'error');
-      return;
+  navigator.geolocation.watchPosition(p=>{
+    if(typeof p.coords.speed === "number"){
+      realSpeed = Math.max(0, p.coords.speed * 3.6);
+      gpsSpeedEl.textContent = Math.round(realSpeed);
     }
 
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
-    };
+    if(lastPos){
+      const dx = p.coords.latitude - lastPos.latitude;
+      const dy = p.coords.longitude - lastPos.longitude;
+      distance += Math.sqrt(dx*dx + dy*dy) * 111;
+      distanceEl.textContent = distance.toFixed(2) + " km";
+    }
+    lastPos = p.coords;
+  },()=>{}, {enableHighAccuracy:true});
 
-    this.watchId = navigator.geolocation.watchPosition(
-      (position) => this.handlePositionSuccess(position),
-      (error) => this.handlePositionError(error),
-      options
-    );
+  resetBtn.onclick = () => {
+    distance = 0;
+    lastPos = null;
+    distanceEl.textContent = "0.0 km";
+  };
+
+  hazardBtn.onclick = () => {
+    hazardOn = !hazardOn;
+    dashboard.classList.toggle("hazard-on", hazardOn);
+    hazardBtn.classList.toggle("active", hazardOn);
+    hazardBtn.classList.toggle("hazard", hazardOn);
+  };
+
+  lockBtn.onclick = async () => {
+    if(!wakeLock && "wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+      lockBtn.classList.add("active","lock");
+    }else{
+      await wakeLock?.release();
+      wakeLock = null;
+      lockBtn.classList.remove("active","lock");
+    }
+  };
+
+  function loop(){
+    displaySpeed += (realSpeed - displaySpeed) * LERP;
+    if(displaySpeed < 0.1) displaySpeed = 0;
+
+    const s = Math.round(displaySpeed);
+    speedEl.textContent = s;
+    gearEl.textContent = gearFromSpeed(s);
+    updateGauge(displaySpeed);
+
+    requestAnimationFrame(loop);
   }
-
-  handlePositionSuccess(position) {
-    this.gpsActive = true;
-    this.gpsStatusEl.classList.remove('gps-inactive');
-    this.gpsStatusEl.classList.add('gps-active');
-    
-    // Update speed
-    if (typeof position.coords.speed === 'number' && position.coords.speed > 0) {
-      const newSpeed = Math.max(0, position.coords.speed * 3.6); // m/s to km/h
-      this.realSpeed = newSpeed;
-      this.gpsSpeedEl.textContent = Math.round(newSpeed);
-      
-      // Update max speed
-      if (newSpeed > this.maxSpeed) {
-        this.maxSpeed = newSpeed;
-        this.maxSpeedEl.textContent = Math.round(newSpeed);
-      }
-      
-      // Calculate distance
-      if (this.lastPosition) {
-        const distance = this.calculateDistance(
-          this.lastPosition.coords.latitude,
-          this.lastPosition.coords.longitude,
-          position.coords.latitude,
-          position.coords.longitude
-        );
-        this.totalDistance += distance;
-        this.distanceEl.textContent = `${this.totalDistance.toFixed(1)} كم`;
-      }
-      
-      this.lastPosition = position;
-    }
-    
-    // Update satellites
-    if (position.coords.altitudeAccuracy) {
-      const satellites = Math.min(Math.round(position.coords.altitudeAccuracy), 12);
-      this.gpsSatellitesEl.textContent = satellites;
-    }
-  }
-
-  handlePositionError(error) {
-    this.gpsActive = false;
-    this.gpsStatusEl.classList.remove('gps-active');
-    this.gpsStatusEl.classList.add('gps-inactive');
-    
-    switch(error.code) {
-      case error.PERMISSION_DENIED:
-        this.showToast('تم رفض إذن GPS', 'error');
-        break;
-      case error.POSITION_UNAVAILABLE:
-        this.showToast('معلومات الموقع غير متاحة', 'error');
-        break;
-      case error.TIMEOUT:
-        this.showToast('انتهت مهلة طلب الموقع', 'warning');
-        break;
-    }
-  }
-
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  getGear(speed) {
-    if (speed === 0) return "N";
-    if (speed <= 20) return "G1";
-    if (speed <= 40) return "G2";
-    if (speed <= 60) return "G3";
-    if (speed <= 80) return "G4";
-    if (speed <= 100) return "G5";
-    return "G6";
-  }
-
-  updateGauge(speed) {
-    const ratio = Math.min(speed / this.MAX_SPEED, 1);
-    
-    // Update needle with smooth animation
-    this.needle.style.transform = `rotate(${ratio * 180}deg)`;
-    
-    // Update arc
-    this.arc.style.strokeDasharray = `${ratio} 1`;
-    
-    // Update color based on speed
-    const hue = 120 - (ratio * 120); // Green (120) to Red (0)
-    this.arc.style.filter = `drop-shadow(0 0 8px hsla(${hue}, 100%, 50%, 0.3))`;
-  }
-
-  toggleHazard() {
-    this.hazardActive = !this.hazardActive;
-    
-    // Prevent hazard at high speeds
-    if (this.hazardActive && this.displaySpeed > this.HAZARD_SPEED_THRESHOLD) {
-      this.showToast('غير آمن: السرعة عالية جداً', 'error');
-      this.hazardActive = false;
-      return;
-    }
-    
-    this.dashboard.classList.toggle('hazard-active', this.hazardActive);
-    this.hazardBtn.classList.toggle('active', this.hazardActive);
-    
-    const action = this.hazardActive ? 'مفعل' : 'معطل';
-    this.showToast(`وضع الخطر ${action}`, this.hazardActive ? 'warning' : 'info');
-  }
-
-  toggleScreenLock() {
-    this.screenLocked = !this.screenLocked;
-    this.lockBtn.classList.toggle('active', this.screenLocked);
-    
-    if (this.screenLocked) {
-      document.documentElement.requestFullscreen?.();
-      screen.orientation?.lock('landscape');
-      this.showToast('تم قفل الشاشة', 'info');
-    } else {
-      document.exitFullscreen?.();
-      this.showToast('تم إلغاء قفل الشاشة', 'info');
-    }
-  }
-
-  showToast(message, type = 'info') {
-    this.toast.textContent = message;
-    this.toast.className = 'toast show';
-    
-    // Set color based on type
-    switch(type) {
-      case 'success':
-        this.toast.style.borderColor = 'var(--color-success)';
-        break;
-      case 'error':
-        this.toast.style.borderColor = 'var(--color-danger)';
-        break;
-      case 'warning':
-        this.toast.style.borderColor = 'var(--color-warning)';
-        break;
-      default:
-        this.toast.style.borderColor = 'var(--border-medium)';
-    }
-    
-    // Auto hide
-    setTimeout(() => {
-      this.toast.classList.remove('show');
-    }, 3000);
-  }
-
-  startAnimationLoop() {
-    const animate = () => {
-      const now = Date.now();
-      const delta = now - this.lastUpdate;
-      this.lastUpdate = now;
-      
-      // Smooth speed interpolation
-      this.displaySpeed += (this.realSpeed - this.displaySpeed) * this.LERP_FACTOR;
-      
-      // Round to zero when very small
-      if (this.displaySpeed < 0.1) this.displaySpeed = 0;
-      
-      // Update display
-      const roundedSpeed = Math.round(this.displaySpeed);
-      this.speedEl.textContent = roundedSpeed;
-      this.gearEl.textContent = this.getGear(roundedSpeed);
-      
-      // Update gauge
-      this.updateGauge(this.displaySpeed);
-      
-      // Auto-disable hazard at high speeds
-      if (this.hazardActive && this.displaySpeed > this.HAZARD_SPEED_THRESHOLD) {
-        this.toggleHazard();
-      }
-      
-      this.rafId = requestAnimationFrame(animate);
-    };
-    
-    animate();
-  }
-
-  pauseUpdates() {
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-    
-    if (this.watchId) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
-    }
-  }
-
-  resumeUpdates() {
-    if (!this.rafId) {
-      this.startAnimationLoop();
-    }
-    
-    if (!this.watchId) {
-      this.startGPS();
-    }
-  }
-
-  // Cleanup
-  destroy() {
-    this.pauseUpdates();
-    
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-    
-    // Clear GPS watch
-    if (this.watchId) {
-      navigator.geolocation.clearWatch(this.watchId);
-    }
-    
-    // Exit fullscreen
-    if (this.screenLocked) {
-      document.exitFullscreen?.();
-    }
-  }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const speedometer = new Speedometer();
-  
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', () => {
-    speedometer.destroy();
-  });
-  
-  // Handle page hide/show
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      speedometer.pauseUpdates();
-    } else {
-      speedometer.resumeUpdates();
-    }
-  });
-});
-
-// Handle service worker for PWA capabilities
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(error => {
-      console.log('Service Worker registration failed:', error);
-    });
-  });
-}
+  loop();
+})();
 </script>
 
 </body>
-            </html>
+</html>
