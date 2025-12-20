@@ -1,727 +1,994 @@
 <!doctype html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Osama Meter</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Osama Meter – Cockpit</title>
 
-  <style>
-    :root{
-      --bg:#000;
-      --fg:#eaf0ff;
-      --muted:#90a0b8;
-      --danger:#ff2a4f;
-      --ok:#1cff9a;
-      --line:#1b1b1b;
+<style>
+:root{
+  --bg:#000;
+  --panel:#030303;
+  --line:#171717;
 
-      /* Digital glow */
-      --glow: rgba(234,240,255,.28);
-      --glow-strong: rgba(234,240,255,.55);
-      --glow-red: rgba(255,42,79,.45);
-    }
+  --white:#eaffff;
+  --green:#19ff6a;
+  --amber:#ffd166;
+  --red:#ff3b3b;
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; }
-    body{
-      background: var(--bg);
-      color: var(--fg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+  --glow-w:rgba(234,255,255,.35);
+  --glow-g:rgba(25,255,106,.45);
+  --glow-r:rgba(255,59,59,.45);
+  --glow-a:rgba(255,209,102,.35);
 
-    /* =========================
-       DIGITAL LOOK (GLOBAL)
-       ========================= */
-    .digital{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      font-variant-numeric: tabular-nums;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: geometricPrecision;
-    }
+  --dim:rgba(234,255,255,.22);
+}
 
-    /* “Lit segments” effect */
-    .digital-lit{
-      color: var(--fg);
-      text-shadow:
-        0 0 10px var(--glow),
-        0 0 22px rgba(234,240,255,.18),
-        0 0 36px rgba(234,240,255,.10);
-      -webkit-text-stroke: 0.35px rgba(234,240,255,.18);
-    }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--white);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
-    /* Unlit “ghost segments” behind the text */
-    .digital-ghost{
-      position: relative;
-      display: inline-block;
-    }
-    .digital-ghost::before{
-      content: attr(data-ghost);
-      position:absolute;
-      inset: 0;
-      color: rgba(234,240,255,.06);
-      text-shadow: none;
-      -webkit-text-stroke: 0;
-      transform: translate(0, 0);
-      pointer-events:none;
-    }
-    .digital-ghost > span{
-      position: relative;
-      z-index: 1;
-    }
+/* ===== DIGITAL LOOK ===== */
+.digital{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing:.10em;
+  font-variant-numeric: tabular-nums;
+  text-transform:uppercase;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+.litW{
+  color:var(--white);
+  text-shadow:0 0 14px var(--glow-w), 0 0 30px rgba(234,255,255,.18);
+}
+.litG{
+  color:var(--green);
+  text-shadow:0 0 14px var(--glow-g), 0 0 34px rgba(25,255,106,.18);
+}
+.litR{
+  color:var(--red);
+  text-shadow:0 0 14px var(--glow-r), 0 0 34px rgba(255,59,59,.18);
+}
+.litA{
+  color:var(--amber);
+  text-shadow:0 0 14px var(--glow-a), 0 0 34px rgba(255,209,102,.18);
+}
 
-    /* Wrapper */
-    .screen{
-      width:min(440px, 96vw);
-      height:min(860px, 96vh);
-      border:2px solid #111;
-      border-radius:18px;
-      padding:18px;
-      position:relative;
-      background:#000;
-      box-shadow: 0 18px 60px rgba(0,0,0,.75);
-    }
+/* ghost segments behind text */
+.ghost{
+  position:relative;
+  display:inline-block;
+}
+.ghost::before{
+  content:attr(data-ghost);
+  position:absolute;
+  inset:0;
+  color:rgba(234,255,255,.06);
+  text-shadow:none;
+  pointer-events:none;
+}
+.ghost > span{position:relative; z-index:1}
 
-    .screen.hid{
-      border-color: rgba(255,42,79,.85);
-      box-shadow:
-        0 0 22px var(--glow-red),
-        0 0 70px rgba(255,42,79,.20),
-        0 18px 60px rgba(0,0,0,.75);
-    }
+/* ===== COCKPIT FRAME ===== */
+.cockpit{
+  width:min(430px, 96vw);
+  height:min(860px, 96vh);
+  border:2px solid #111;
+  border-radius:18px;
+  padding:14px;
+  background:#000;
+  box-shadow:0 22px 70px rgba(0,0,0,.9);
+  position:relative;
+  overflow:hidden;
+}
+.cockpit.alert{
+  border-color:#300;
+  box-shadow:
+    0 0 18px var(--glow-r),
+    0 0 60px rgba(255,59,59,.22),
+    0 22px 70px rgba(0,0,0,.9);
+}
 
-    /* Header */
-    .header{
-      text-align:center;
-      padding-top:6px;
-      padding-bottom:12px;
-      border-bottom:1px solid var(--line);
-    }
-    .title{
-      font-weight:900;
-      font-size:18px;
-      margin:0;
-    }
-    .subtitle{
-      margin:6px 0 0;
-      color: var(--muted);
-      font-size:14px;
-      letter-spacing: .08em;
-    }
+/* scanline + subtle noise */
+.cockpit::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.03) 0px,
+      rgba(255,255,255,.03) 1px,
+      rgba(0,0,0,0) 3px,
+      rgba(0,0,0,0) 6px
+    );
+  opacity:.20;
+  pointer-events:none;
+  mix-blend-mode:overlay;
+}
+.cockpit::after{
+  content:"";
+  position:absolute; inset:-20%;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(25,255,106,.08), transparent 35%),
+    radial-gradient(circle at 80% 30%, rgba(234,255,255,.06), transparent 40%),
+    radial-gradient(circle at 40% 90%, rgba(255,59,59,.05), transparent 45%);
+  opacity:.85;
+  pointer-events:none;
+}
 
-    /* Main block */
-    .main{
-      height: calc(100% - 120px);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      gap:18px;
-      padding:18px 6px;
-    }
+/* ===== HEADER ===== */
+.header{
+  text-align:center;
+  padding:8px 0 10px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+  z-index:2;
+}
+.header .title{
+  font-weight:900;
+  font-size:16px;
+  letter-spacing:.26em;
+}
+.header .subtitle{
+  margin-top:6px;
+  font-size:12px;
+  letter-spacing:.20em;
+  color:var(--dim);
+}
 
-    /* Big speed */
-    .speedWrap{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:18px 14px;
-      text-align:center;
-      background: radial-gradient(600px 220px at 50% 20%, rgba(234,240,255,.05), transparent 60%);
-    }
+/* ===== MAIN GRID ===== */
+.grid{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns: 1.15fr .85fr;
+  grid-template-rows: auto auto 1fr;
+  gap:10px;
+  padding-top:10px;
+  height: calc(100% - 150px);
+}
 
-    .speed{
-      font-weight:900;
-      font-size:92px;
-      line-height:1;
-      letter-spacing:.10em;
-    }
+/* ===== SPEED TAPE ===== */
+.speedTape{
+  grid-row:1 / span 3;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%), #000;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  overflow:hidden;
+}
 
-    .unit{
-      margin-top:6px;
-      font-size:14px;
-      letter-spacing: .28em;
-      color: var(--muted);
-    }
+.speedTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.speedLabel{
+  font-size:11px;
+  letter-spacing:.28em;
+  color:var(--dim);
+}
+.gpsBadge{
+  font-size:11px;
+  letter-spacing:.18em;
+  padding:6px 8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--dim);
+}
 
-    /* Gear row */
-    .row{
-      width:100%;
-      display:flex;
-      gap:12px;
-    }
+.speedCenter{
+  display:grid;
+  place-items:center;
+  padding:8px 0;
+}
+.speedValue{
+  font-size:92px;
+  font-weight:900;
+  letter-spacing:.14em;
+  line-height:1;
+}
+.speedUnit{
+  margin-top:8px;
+  font-size:13px;
+  letter-spacing:.32em;
+  color:var(--dim);
+}
 
-    .card{
-      flex:1;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px 12px;
-      background:#000;
-    }
+/* moving mini tape window */
+.tapeWindow{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+  height:180px;
+  position:relative;
+  overflow:hidden;
+}
+.tapeScale{
+  position:absolute;
+  left:0; right:0;
+  top:50%;
+  transform: translateY(-50%);
+  will-change: transform;
+}
+.tickRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:28px;
+  padding:0 4px;
+}
+.tickRow .tline{
+  flex:1;
+  height:2px;
+  margin:0 10px;
+  background:rgba(234,255,255,.15);
+}
+.tickRow.major .tline{ background:rgba(234,255,255,.26); }
+.tickRow .tnum{
+  width:48px;
+  text-align:right;
+  color:rgba(234,255,255,.30);
+  font-size:12px;
+}
 
-    .label{
-      font-size:12px;
-      letter-spacing:.22em;
-      color: var(--muted);
-      text-transform:uppercase;
-    }
+/* target marker */
+.marker{
+  position:absolute;
+  left:10px; right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  border:1px solid rgba(234,255,255,.18);
+  border-radius:10px;
+  padding:8px 10px;
+  background:rgba(0,0,0,.55);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.marker .mLabel{ font-size:11px; color:var(--dim); letter-spacing:.22em; }
+.marker .mVal{ font-size:16px; color:var(--white); }
 
-    .gear{
-      margin-top:6px;
-      font-weight:900;
-      font-size:44px;
-      color: var(--danger);
-      text-shadow:
-        0 0 10px rgba(255,42,79,.22),
-        0 0 22px rgba(255,42,79,.12);
-      letter-spacing:.10em;
-    }
+/* dashing animation strip */
+.dashStrip{
+  height:6px;
+  border-radius:999px;
+  background:
+    repeating-linear-gradient(90deg, var(--green) 0 10px, transparent 10px 18px);
+  filter: drop-shadow(0 0 10px var(--glow-g));
+  animation: dashmove 1.1s linear infinite;
+  margin-top:10px;
+}
+@keyframes dashmove{
+  from{ background-position:0 0; }
+  to{ background-position:36px 0; }
+}
 
-    /* Battery */
-    .batteryWrap{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:6px;
-    }
-    .batteryPct{
-      font-weight:900;
-      font-size:18px;
-      letter-spacing:.10em;
-    }
-    .batteryBarOuter{
-      width:140px;
-      height:14px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:2px;
-      overflow:hidden;
-    }
-    .batteryBar{
-      height:100%;
-      width:0%;
-      background: var(--fg);
-      border-radius:999px;
-      transition: width .2s linear;
-      box-shadow: 0 0 16px rgba(234,240,255,.12);
-    }
+/* ===== RIGHT BLOCKS ===== */
+.block{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#000;
+  padding:10px;
+}
+.label{
+  font-size:11px;
+  letter-spacing:.26em;
+  color:var(--dim);
+}
+.valueBig{
+  margin-top:8px;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.18em;
+}
 
-    /* Status + controls */
-    .footer{
-      position:absolute;
-      left:18px;
-      right:18px;
-      bottom:16px;
-      border-top:1px solid var(--line);
-      padding-top:12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+/* battery */
+.battRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+.battPct{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+.battOuter{
+  flex:1;
+  height:12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:2px;
+}
+.battBar{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:var(--green);
+  box-shadow:0 0 12px var(--glow-g);
+  transition:width .15s linear;
+}
 
-    .statusLine{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color: var(--muted);
-      font-size:12px;
-      letter-spacing:.14em;
-    }
+/* Annunciators */
+.annun{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+.lamp{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 8px;
+  text-align:center;
+  font-size:11px;
+  letter-spacing:.18em;
+  color:rgba(234,255,255,.32);
+  background:rgba(255,255,255,.02);
+}
+.lamp.on{
+  color:#000;
+  background:var(--amber);
+  box-shadow:0 0 18px rgba(255,209,102,.25);
+}
+.lamp.danger{
+  background:var(--red);
+  color:#000;
+  box-shadow:0 0 18px rgba(255,59,59,.25);
+}
+.lamp.blink{
+  animation: blink 0.7s steps(2, end) infinite;
+}
+@keyframes blink{
+  50%{ filter:brightness(1.25); }
+}
 
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background:#333;
-      display:inline-block;
-      margin-inline-end:8px;
-    }
-    .dot.ok{ background: var(--ok); box-shadow:0 0 16px rgba(28,255,154,.25); }
-    .dot.warn{ background: #ffd166; box-shadow:0 0 16px rgba(255,209,102,.18); }
-    .dot.bad{ background: var(--danger); box-shadow:0 0 16px rgba(255,42,79,.22); }
+/* ===== FOOTER ===== */
+.footer{
+  position:absolute;
+  left:14px; right:14px;
+  bottom:12px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+  z-index:2;
+}
+.statusLine{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:11px;
+  letter-spacing:.22em;
+  color:var(--dim);
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#333;
+  display:inline-block;
+  margin-inline-end:7px;
+}
+.dot.ok{ background:var(--green); box-shadow:0 0 12px var(--glow-g); }
+.dot.warn{ background:var(--amber); box-shadow:0 0 12px var(--glow-a); }
+.dot.bad{ background:var(--red); box-shadow:0 0 12px var(--glow-r); }
 
-    .btnRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    button{
-      appearance:none;
-      border:1px solid var(--line);
-      background:#050505;
-      color: var(--fg);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:900;
-      letter-spacing:.10em;
-      cursor:pointer;
-      flex:1;
-      min-width: 140px;
-    }
-    button:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-    }
+.btnRow{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+button{
+  flex:1;
+  background:#050505;
+  border:1px solid var(--line);
+  color:var(--white);
+  padding:10px 10px;
+  border-radius:12px;
+  font-weight:900;
+  letter-spacing:.14em;
+  cursor:pointer;
+}
+button:disabled{ opacity:.45; cursor:not-allowed; }
+.hint{
+  margin-top:8px;
+  font-size:11px;
+  color:rgba(234,255,255,.25);
+  letter-spacing:.10em;
+  line-height:1.45;
+}
 
-    .hint{
-      font-size:11px;
-      color: var(--muted);
-      line-height:1.45;
-      letter-spacing:.06em;
-    }
-
-    @media (max-height: 720px){
-      .speed{ font-size:78px; }
-      .gear{ font-size:40px; }
-    }
-  </style>
+/* responsive */
+@media (max-height: 740px){
+  .speedValue{ font-size:78px; }
+  .tapeWindow{ height:150px; }
+}
+</style>
 </head>
 
 <body>
-  <div class="screen" id="screen">
-    <div class="header digital digital-lit">
-      <h1 class="title">Osama Meter</h1>
-      <p class="subtitle">دراجة عبد الحليم</p>
-    </div>
 
-    <div class="main">
-      <div class="speedWrap">
-        <!-- ghost segments: show "88" style background -->
-        <div class="digital digital-lit digital-ghost speed" id="speedGhost" data-ghost="88">
+<div class="cockpit" id="cockpit">
+  <div class="header digital">
+    <div class="title litG">OSAMA METER</div>
+    <div class="subtitle">دراجة عبد الحليم</div>
+  </div>
+
+  <div class="grid">
+    <!-- SPEED TAPE -->
+    <div class="speedTape">
+      <div class="speedTop digital">
+        <div class="speedLabel">GROUND SPEED</div>
+        <div class="gpsBadge" id="gpsBadge">GPS: WAIT</div>
+      </div>
+
+      <div class="speedCenter digital">
+        <div class="ghost speedValue litW" id="speedGhost" data-ghost="888">
           <span id="speed">--</span>
         </div>
-        <div class="digital unit" id="unit">KM/H</div>
+        <div class="speedUnit">KM / H</div>
+        <div class="dashStrip" aria-hidden="true"></div>
       </div>
 
-      <div class="row">
-        <div class="card">
-          <div class="digital label">GEAR</div>
-          <div class="digital gear digital-ghost" id="gearGhost" data-ghost="G8">
-            <span id="gear">-</span>
-          </div>
+      <div class="tapeWindow digital">
+        <div class="marker">
+          <div class="mLabel">TARGET</div>
+          <div class="mVal" id="target">25</div>
         </div>
-
-        <div class="card">
-          <div class="digital label">BATTERY</div>
-          <div class="batteryWrap">
-            <div class="digital batteryPct digital-ghost" id="batteryPctGhost" data-ghost="100%">
-              <span id="batteryPct">--%</span>
-            </div>
-            <div class="batteryBarOuter" aria-label="Battery level">
-              <div class="batteryBar" id="batteryBar"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="width:100%;">
-        <div class="digital label">ALERT</div>
-        <div class="digital" style="margin-top:8px; color:var(--muted); font-size:13px; letter-spacing:.08em;">
-          ABOVE <b>25</b> KM/H: BEEP + HID HIGHLIGHT
-        </div>
+        <div class="tapeScale" id="tapeScale"></div>
       </div>
     </div>
 
-    <div class="footer">
-      <div class="statusLine digital">
-        <div>
-          <span class="dot warn" id="dot"></span>
-          <span id="status">طلب صلاحية GPS…</span>
-        </div>
-        <div id="acc">ACC: -- M</div>
+    <!-- GEAR -->
+    <div class="block digital">
+      <div class="label">GEAR</div>
+      <div class="valueBig litA ghost" id="gearGhost" data-ghost="G8"><span id="gear">-</span></div>
+      <div class="annun">
+        <div class="lamp" id="lampStop">STOP</div>
+        <div class="lamp" id="lampMove">MOVE</div>
+      </div>
+    </div>
+
+    <!-- BATTERY -->
+    <div class="block digital">
+      <div class="label">BATTERY</div>
+      <div class="battRow">
+        <div class="battPct ghost litG" id="battGhost" data-ghost="100%"><span id="batteryPct">--%</span></div>
+        <div class="battOuter"><div class="battBar" id="batteryBar"></div></div>
       </div>
 
-      <div class="btnRow">
-        <button class="digital" id="wakeBtn" type="button">KEEP SCREEN ON: OFF</button>
-        <button class="digital" id="hazardBtn" type="button">HAZARD: OFF</button>
+      <div class="annun">
+        <div class="lamp" id="lampWake">WAKE</div>
+        <div class="lamp" id="lampHaz">HAZ</div>
       </div>
+    </div>
 
-      <div class="hint digital" id="hint">
-        ملاحظة: قد يتطلب تشغيل الصوت/التنبيه ضغطة زر مرة واحدة. الفلاش يعمل فقط إذا الجهاز يدعم TORCH ومع HTTPS.
+    <!-- ALERT / ANNUNCIATORS -->
+    <div class="block digital">
+      <div class="label">ANNUNCIATORS</div>
+      <div class="annun">
+        <div class="lamp" id="lampGps">GPS</div>
+        <div class="lamp danger" id="lampOvs">OVERSPEED</div>
+      </div>
+      <div class="hint" style="margin-top:10px;">
+        OVERSPEED فعال عندما السرعة &gt; 25 KM/H (صوت + إضاءة)
       </div>
     </div>
   </div>
 
-  <script>
-    // =============================
-    // CONFIG (tuned for mobile stability)
-    // =============================
-    const MAX_ACC_M = 30;          // ignore noisy fixes
-    const EMA_ALPHA = 0.22;        // smoothing
-    const STOP_SPEED_KMH = 2.0;    // stop threshold
-    const STOP_HOLD_MS = 1400;     // snap to 0 after stable stop
-    const ALERT_SPEED_KMH = 25.0;  // beep + HID above this
+  <!-- FOOTER -->
+  <div class="footer digital">
+    <div class="statusLine">
+      <div>
+        <span class="dot warn" id="dot"></span>
+        <span id="status">REQUESTING GPS</span>
+      </div>
+      <div id="acc">ACC: -- M</div>
+    </div>
 
-    // =============================
-    // UI elements
-    // =============================
-    const screen = document.getElementById("screen");
-    const speedEl = document.getElementById("speed");
-    const gearEl = document.getElementById("gear");
-    const statusEl = document.getElementById("status");
-    const dotEl = document.getElementById("dot");
-    const accEl = document.getElementById("acc");
-    const batteryPctEl = document.getElementById("batteryPct");
-    const batteryBarEl = document.getElementById("batteryBar");
-    const wakeBtn = document.getElementById("wakeBtn");
-    const hazardBtn = document.getElementById("hazardBtn");
+    <div class="btnRow">
+      <button id="wakeBtn" type="button">KEEP SCREEN ON: OFF</button>
+      <button id="hazardBtn" type="button">HAZARD: OFF</button>
+    </div>
 
-    // =============================
-    // State
-    // =============================
-    let emaSpeed = 0;
-    let stopSince = null;
+    <div class="hint" id="hint">
+      ملاحظة: الصوت قد يحتاج ضغطة زر مرة واحدة بسبب سياسة المتصفح. الفلاش يعمل فقط إذا الجهاز يدعم TORCH وبـ HTTPS.
+    </div>
+  </div>
+</div>
 
-    // Beep state
-    let audioCtx = null;
-    let beepTimer = null;
+<script>
+/* ==============================
+   Performance-first cockpit JS
+   ============================== */
 
-    // Wake lock state
-    let wakeLock = null;
-    let wakeOn = false;
+/* ---- CONFIG ---- */
+const CFG = {
+  MAX_ACC_M: 30,
+  EMA_ALPHA: 0.22,
+  STOP_KMH: 2.0,
+  STOP_HOLD_MS: 1400,
+  ALERT_KMH: 25.0,
 
-    // Hazard (torch) state
-    let hazardOn = false;
-    let hazardInterval = null;
-    let torchTrack = null;
-    let torchSupported = false;
+  // render settings
+  UI_FPS_LIMIT: 30,         // cap UI refresh (mobile friendly)
+  TAPE_STEP_KMH: 5,         // tick step
+  TAPE_VISIBLE_ROWS: 11,    // number of tick rows
+  TAPE_ROW_PX: 28,          // must match CSS .tickRow height
+};
 
-    // =============================
-    // Helpers
-    // =============================
-    function setStatus(kind, text){
-      statusEl.textContent = text;
-      dotEl.className = "dot " + kind;
-    }
+/* ---- DOM ---- */
+const $ = (id) => document.getElementById(id);
 
-    function gearFromSpeedKmh(v){
-      // EXACT rules requested
-      if (v <= 10) return "G1";
-      if (v <= 15) return "G2";
-      if (v <= 20) return "G3";
-      if (v <= 25) return "G4";
-      if (v <= 30) return "G5";
-      return "G5";
-    }
+const cockpit = $("cockpit");
+const speedEl = $("speed");
+const gearEl = $("gear");
+const statusEl = $("status");
+const accEl = $("acc");
+const dot = $("dot");
+const gpsBadge = $("gpsBadge");
 
-    function updateUI(speedKmh, accuracy){
-      if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " M";
-      else accEl.textContent = "ACC: -- M";
+const tapeScale = $("tapeScale");
 
-      if (!Number.isFinite(speedKmh)){
-        speedEl.textContent = "--";
-        gearEl.textContent = "-";
+const batteryPctEl = $("batteryPct");
+const batteryBarEl = $("batteryBar");
+
+const wakeBtn = $("wakeBtn");
+const hazardBtn = $("hazardBtn");
+
+const lampStop = $("lampStop");
+const lampMove = $("lampMove");
+const lampWake = $("lampWake");
+const lampHaz  = $("lampHaz");
+const lampGps  = $("lampGps");
+const lampOvs  = $("lampOvs");
+
+/* ---- STATE ---- */
+let emaSpeed = 0;
+let stopSince = null;
+
+let lastGpsTs = 0;
+let lastUiTs = 0;
+let latestAcc = NaN;
+let gpsOk = false;
+let overspeed = false;
+
+let audioCtx = null;
+let beepTimer = null;
+
+let wakeLock = null;
+let wakeOn = false;
+
+let torchSupported = false;
+let hazardOn = false;
+let hazardInterval = null;
+let torchTrack = null;
+
+/* ==============================
+   UI helpers (low thrash)
+   ============================== */
+function setStatus(kind, text){
+  statusEl.textContent = text;
+  dot.className = "dot " + kind;
+}
+function setLamp(el, on, extraClass){
+  el.classList.toggle("on", !!on);
+  if(extraClass) el.classList.toggle(extraClass, !!on);
+}
+function setBlink(el, on){
+  el.classList.toggle("blink", !!on);
+}
+
+/* ==============================
+   Gear rules (exact request)
+   ============================== */
+function gearFromSpeed(v){
+  if (v <= 10) return "G1";
+  if (v <= 15) return "G2";
+  if (v <= 20) return "G3";
+  if (v <= 25) return "G4";
+  if (v <= 30) return "G5";
+  return "G5";
+}
+
+/* ==============================
+   Tape builder (DOM once)
+   ============================== */
+function buildTape(){
+  // We build rows around "0" and translate container in render.
+  // Rows show values each 5 km/h with major ticks each 10.
+  const rows = [];
+  const half = Math.floor(CFG.TAPE_VISIBLE_ROWS / 2);
+
+  for(let i=-half; i<=half; i++){
+    const row = document.createElement("div");
+    row.className = "tickRow" + ((i % 2 === 0) ? " major" : "");
+    const num = document.createElement("div");
+    num.className = "tnum";
+    num.textContent = "0";
+    const line = document.createElement("div");
+    line.className = "tline";
+    const blank = document.createElement("div");
+    blank.style.width = "12px";
+
+    row.appendChild(num);
+    row.appendChild(line);
+    row.appendChild(blank);
+
+    tapeScale.appendChild(row);
+    rows.push({row, num});
+  }
+  return rows;
+}
+const tapeRows = buildTape();
+
+/* ==============================
+   Render loop (rAF) with FPS cap
+   ============================== */
+function render(now){
+  requestAnimationFrame(render);
+
+  // cap UI fps
+  if(now - lastUiTs < (1000 / CFG.UI_FPS_LIMIT)) return;
+  lastUiTs = now;
+
+  // Speed display
+  const sp = Math.max(0, emaSpeed);
+  speedEl.textContent = Number.isFinite(sp) ? String(Math.round(sp)) : "--";
+  gearEl.textContent = Number.isFinite(sp) ? gearFromSpeed(sp) : "-";
+
+  // GPS badge / status
+  if(gpsOk){
+    gpsBadge.textContent = "GPS: OK";
+    setLamp(lampGps, true);
+  } else {
+    gpsBadge.textContent = "GPS: WAIT";
+    setLamp(lampGps, false);
+  }
+
+  // Accuracy
+  accEl.textContent = "ACC: " + (Number.isFinite(latestAcc) ? Math.round(latestAcc) : "--") + " M";
+
+  // Move/Stop lamps
+  const moving = sp > CFG.STOP_KMH;
+  setLamp(lampMove, moving);
+  setLamp(lampStop, !moving);
+
+  // Overspeed visuals
+  cockpit.classList.toggle("alert", overspeed);
+  // blink overspeed lamp when active
+  setBlink(lampOvs, overspeed);
+
+  // Wake/Haz lamps
+  setLamp(lampWake, wakeOn);
+  setLamp(lampHaz, hazardOn);
+
+  // Update tape scrolling:
+  // show ticks centered around current speed, smooth by fractional part
+  const step = CFG.TAPE_STEP_KMH;
+  const base = Math.floor(sp / step) * step;
+  const frac = (sp - base) / step; // 0..1
+  // translate so center row corresponds to base and move opposite direction with frac
+  const offsetPx = frac * CFG.TAPE_ROW_PX;
+  tapeScale.style.transform = `translateY(calc(-50% + ${offsetPx}px))`;
+
+  // Update numbers on rows
+  // center value should be base, rows around it by +/- step
+  const half = Math.floor(CFG.TAPE_VISIBLE_ROWS / 2);
+  for(let i=0; i<tapeRows.length; i++){
+    const rel = i - half; // -half..+half
+    const v = base + (rel * step);
+    tapeRows[i].num.textContent = String(Math.max(0, v));
+    // dim far ticks
+    const dist = Math.abs(rel);
+    tapeRows[i].row.style.opacity = (dist >= half) ? "0.22" : (dist >= half-1 ? "0.35" : "0.65");
+  }
+}
+
+/* ==============================
+   Alarm: Beep-Beep (WebAudio)
+   ============================== */
+function ensureAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playBeepOnce(){
+  ensureAudio();
+  const now = audioCtx.currentTime;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.connect(audioCtx.destination);
+
+  const osc = audioCtx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(950, now);
+  osc.connect(gain);
+
+  // double beep envelope
+  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+  gain.gain.setValueAtTime(0.0001, now + 0.21);
+  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.22);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.33);
+
+  osc.start(now);
+  osc.stop(now + 0.40);
+
+  osc.onended = () => {
+    try{ osc.disconnect(); }catch(e){}
+    try{ gain.disconnect(); }catch(e){}
+  };
+}
+
+function startAlarm(){
+  if(beepTimer) return;
+  try{ playBeepOnce(); }catch(e){}
+  beepTimer = setInterval(() => { try{ playBeepOnce(); }catch(e){} }, 1200);
+}
+
+function stopAlarm(){
+  if(beepTimer){
+    clearInterval(beepTimer);
+    beepTimer = null;
+  }
+  if(audioCtx){
+    try{ audioCtx.close(); }catch(e){}
+    audioCtx = null;
+  }
+}
+
+/* ==============================
+   GPS: stable update
+   ============================== */
+function initGPS(){
+  if(!("geolocation" in navigator)){
+    setStatus("bad", "GPS NOT SUPPORTED");
+    return;
+  }
+
+  setStatus("warn", "REQUESTING GPS");
+  gpsOk = false;
+
+  navigator.geolocation.watchPosition(
+    (pos) => {
+      const { speed, accuracy } = pos.coords;
+      latestAcc = (typeof accuracy === "number" && isFinite(accuracy)) ? accuracy : NaN;
+
+      // ignore noisy fixes
+      if (Number.isFinite(latestAcc) && latestAcc > CFG.MAX_ACC_M){
+        gpsOk = false;
+        setStatus("warn", "GPS WEAK");
         return;
       }
 
-      speedEl.textContent = String(Math.round(speedKmh));
-      gearEl.textContent = gearFromSpeedKmh(speedKmh);
-    }
-
-    // =============================
-    // Beep-Beep (WebAudio)
-    // =============================
-    function ensureAudio(){
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playBeepOnce(){
-      ensureAudio();
-      const now = audioCtx.currentTime;
-
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.connect(audioCtx.destination);
-
-      const osc = audioCtx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(950, now);
-      osc.connect(gain);
-
-      // beep 1
-      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-
-      // beep 2
-      gain.gain.setValueAtTime(0.0001, now + 0.21);
-      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.22);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.33);
-
-      osc.start(now);
-      osc.stop(now + 0.40);
-
-      osc.onended = () => {
-        try { osc.disconnect(); } catch(e){}
-        try { gain.disconnect(); } catch(e){}
-      };
-    }
-
-    function startAlarm(){
-      if (beepTimer) return;
-      try { playBeepOnce(); } catch(e) {}
-      beepTimer = setInterval(() => {
-        try { playBeepOnce(); } catch(e) {}
-      }, 1200);
-    }
-
-    function stopAlarm(){
-      if (beepTimer){
-        clearInterval(beepTimer);
-        beepTimer = null;
+      // prefer coords.speed; if null keep last
+      if (typeof speed !== "number" || !isFinite(speed) || speed < 0){
+        gpsOk = false;
+        setStatus("warn", "GPS WAIT");
+        return;
       }
-      if (audioCtx){
-        try { audioCtx.close(); } catch(e){}
-        audioCtx = null;
-      }
-    }
 
-    // =============================
-    // HID highlight (visual alert)
-    // =============================
-    function setHid(on){
-      if (on) screen.classList.add("hid");
-      else screen.classList.remove("hid");
-    }
+      gpsOk = true;
+      setStatus("ok", "GPS ACTIVE");
 
-    // =============================
-    // Wake Lock
-    // =============================
-    async function enableWakeLock(){
-      if (!("wakeLock" in navigator)) {
-        setStatus("warn", "WAKE LOCK غير مدعوم.");
-        return false;
-      }
-      try {
-        wakeLock = await navigator.wakeLock.request("screen");
-        wakeLock.addEventListener("release", () => {
-          wakeLock = null;
-          wakeOn = false;
-          wakeBtn.textContent = "KEEP SCREEN ON: OFF";
-        });
-        return true;
-      } catch (e){
-        setStatus("warn", "فشل WAKE LOCK.");
-        return false;
-      }
-    }
+      const rawKmh = speed * 3.6;
 
-    async function toggleWake(){
-      // user gesture -> helps unlock audio too
-      if (!wakeOn){
-        const ok = await enableWakeLock();
-        if (ok){
-          wakeOn = true;
-          wakeBtn.textContent = "KEEP SCREEN ON: ON";
-        }
+      // EMA smoothing
+      emaSpeed = CFG.EMA_ALPHA * rawKmh + (1 - CFG.EMA_ALPHA) * emaSpeed;
+
+      // stop hysteresis
+      const t = pos.timestamp;
+      if (emaSpeed < CFG.STOP_KMH){
+        if (stopSince === null) stopSince = t;
+        if ((t - stopSince) >= CFG.STOP_HOLD_MS) emaSpeed = 0;
       } else {
-        if (wakeLock){
-          try { await wakeLock.release(); } catch(e){}
-          wakeLock = null;
-        }
-        wakeOn = false;
-        wakeBtn.textContent = "KEEP SCREEN ON: OFF";
+        stopSince = null;
       }
-    }
 
-    document.addEventListener("visibilitychange", async () => {
-      if (!document.hidden && wakeOn && !wakeLock){
-        await enableWakeLock();
-      }
+      // overspeed
+      overspeed = emaSpeed > CFG.ALERT_KMH;
+      if (overspeed) startAlarm();
+      else stopAlarm();
+
+      lastGpsTs = t;
+    },
+    () => {
+      gpsOk = false;
+      setStatus("bad", "GPS ERROR");
+      overspeed = false;
+      stopAlarm();
+    },
+    { enableHighAccuracy: true, maximumAge: 250, timeout: 8000 }
+  );
+}
+
+/* ==============================
+   Battery
+   ============================== */
+async function initBattery(){
+  if(!("getBattery" in navigator)){
+    batteryPctEl.textContent = "N/A";
+    batteryBarEl.style.width = "0%";
+    return;
+  }
+  try{
+    const b = await navigator.getBattery();
+    const update = () => {
+      const pct = Math.round(b.level * 100);
+      batteryPctEl.textContent = pct + "%";
+      batteryBarEl.style.width = pct + "%";
+      if (pct <= 15) batteryBarEl.style.background = "var(--red)";
+      else if (pct <= 35) batteryBarEl.style.background = "var(--amber)";
+      else batteryBarEl.style.background = "var(--green)";
+    };
+    update();
+    b.addEventListener("levelchange", update);
+    b.addEventListener("chargingchange", update);
+  } catch(e){
+    batteryPctEl.textContent = "N/A";
+  }
+}
+
+/* ==============================
+   Wake Lock (Keep screen on)
+   ============================== */
+async function enableWakeLock(){
+  if(!("wakeLock" in navigator)) return false;
+  try{
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+      wakeOn = false;
+      wakeBtn.textContent = "KEEP SCREEN ON: OFF";
     });
+    return true;
+  } catch(e){
+    return false;
+  }
+}
 
-    wakeBtn.addEventListener("click", toggleWake);
-
-    // =============================
-    // Battery indicator
-    // =============================
-    async function initBattery(){
-      if (!("getBattery" in navigator)){
-        batteryPctEl.textContent = "N/A";
-        batteryBarEl.style.width = "0%";
-        return;
-      }
-      try{
-        const b = await navigator.getBattery();
-        const update = () => {
-          const pct = Math.round(b.level * 100);
-          batteryPctEl.textContent = pct + "%";
-          batteryBarEl.style.width = pct + "%";
-          if (pct <= 15) batteryBarEl.style.background = "var(--danger)";
-          else if (pct <= 35) batteryBarEl.style.background = "#ffd166";
-          else batteryBarEl.style.background = "var(--fg)";
-        };
-        update();
-        b.addEventListener("levelchange", update);
-        b.addEventListener("chargingchange", update);
-      } catch(e){
-        batteryPctEl.textContent = "N/A";
-      }
+async function toggleWake(){
+  // user gesture helps unlock audio
+  if(!wakeOn){
+    const ok = await enableWakeLock();
+    if(ok){
+      wakeOn = true;
+      wakeBtn.textContent = "KEEP SCREEN ON: ON";
+    } else {
+      setStatus("warn", "WAKELOCK FAIL");
     }
+  }else{
+    try{ await wakeLock?.release(); }catch(e){}
+    wakeLock = null;
+    wakeOn = false;
+    wakeBtn.textContent = "KEEP SCREEN ON: OFF";
+  }
+}
 
-    // =============================
-    // Hazard Torch (flashlight)
-    // =============================
-    async function detectTorchSupport(){
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }});
-        const track = stream.getVideoTracks()[0];
-        const caps = track.getCapabilities ? track.getCapabilities() : {};
-        const hasTorch = !!caps.torch;
+document.addEventListener("visibilitychange", async () => {
+  if(!document.hidden && wakeOn && !wakeLock){
+    await enableWakeLock();
+  }
+});
 
-        track.stop();
-        stream.getTracks().forEach(t => t.stop());
-        return hasTorch;
-      } catch(e){
-        return false;
-      }
+wakeBtn.addEventListener("click", toggleWake, { passive:true });
+
+/* ==============================
+   Hazard (Flashlight Torch)
+   ============================== */
+async function detectTorchSupport(){
+  if(!navigator.mediaDevices?.getUserMedia) return false;
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal:"environment" } }});
+    const track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    const ok = !!caps.torch;
+    track.stop();
+    stream.getTracks().forEach(t => t.stop());
+    return ok;
+  } catch(e){
+    return false;
+  }
+}
+
+async function setTorch(on){
+  if(!torchTrack) return;
+  await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
+}
+
+async function startHazard(){
+  if(!torchSupported || hazardInterval) return;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal:"environment" } }});
+  torchTrack = stream.getVideoTracks()[0];
+
+  let state = false;
+  hazardInterval = setInterval(async () => {
+    if(!hazardOn) return;
+    try{
+      state = !state;
+      await setTorch(state);
+    } catch(e){}
+  }, 500);
+}
+
+async function stopHazard(){
+  if(hazardInterval){
+    clearInterval(hazardInterval);
+    hazardInterval = null;
+  }
+  if(torchTrack){
+    try{ await setTorch(false); }catch(e){}
+    try{ torchTrack.stop(); }catch(e){}
+    torchTrack = null;
+  }
+}
+
+async function toggleHazard(){
+  // user gesture helps audio too
+  if(!torchSupported){
+    hazardBtn.disabled = true;
+    hazardBtn.textContent = "HAZARD: N/A";
+    setStatus("warn", "TORCH NOT SUPPORTED");
+    return;
+  }
+
+  hazardOn = !hazardOn;
+  hazardBtn.textContent = hazardOn ? "HAZARD: ON" : "HAZARD: OFF";
+
+  if(hazardOn){
+    try{
+      await startHazard();
+    }catch(e){
+      hazardOn = false;
+      hazardBtn.textContent = "HAZARD: OFF";
+      setStatus("warn", "TORCH FAIL");
     }
+  }else{
+    await stopHazard();
+  }
+}
 
-    async function setTorch(on){
-      if (!torchTrack) return;
-      await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
-    }
+hazardBtn.addEventListener("click", toggleHazard, { passive:true });
 
-    async function startHazard(){
-      if (!torchSupported) return;
-      if (hazardInterval) return;
+/* ==============================
+   Init
+   ============================== */
+(async function init(){
+  // start render loop
+  requestAnimationFrame(render);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }
-      });
-      torchTrack = stream.getVideoTracks()[0];
+  // battery
+  await initBattery();
 
-      let state = false;
-      hazardInterval = setInterval(async () => {
-        try{
-          state = !state;
-          await setTorch(state);
-        } catch(e){}
-      }, 500);
-    }
+  // torch detection
+  torchSupported = await detectTorchSupport();
+  if(!torchSupported){
+    hazardBtn.disabled = true;
+    hazardBtn.textContent = "HAZARD: N/A";
+  }
 
-    async function stopHazard(){
-      if (hazardInterval){
-        clearInterval(hazardInterval);
-        hazardInterval = null;
-      }
-      if (torchTrack){
-        try { await setTorch(false); } catch(e){}
-        try { torchTrack.stop(); } catch(e){}
-        torchTrack = null;
-      }
-    }
+  // gps
+  initGPS();
+})();
 
-    async function toggleHazard(){
-      // user gesture helps audio too
-      if (!torchSupported){
-        setStatus("warn", "TORCH غير مدعوم.");
-        hazardBtn.disabled = true;
-        return;
-      }
+window.addEventListener("beforeunload", async () => {
+  try{ await stopHazard(); }catch(e){}
+  try{ stopAlarm(); }catch(e){}
+});
+</script>
 
-      hazardOn = !hazardOn;
-      hazardBtn.textContent = hazardOn ? "HAZARD: ON" : "HAZARD: OFF";
-
-      if (hazardOn) {
-        try { await startHazard(); }
-        catch(e){
-          setStatus("warn", "فشل تشغيل الفلاش.");
-          hazardOn = false;
-          hazardBtn.textContent = "HAZARD: OFF";
-        }
-      } else {
-        await stopHazard();
-      }
-    }
-
-    hazardBtn.addEventListener("click", toggleHazard);
-
-    // =============================
-    // GPS Speed (stable)
-    // =============================
-    function initGPS(){
-      if (!("geolocation" in navigator)){
-        setStatus("bad", "GPS غير مدعوم.");
-        updateUI(NaN, NaN);
-        return;
-      }
-
-      setStatus("warn", "طلب صلاحية GPS…");
-
-      navigator.geolocation.watchPosition(
-        (pos) => {
-          const { speed, accuracy } = pos.coords;
-
-          if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " M";
-
-          if (Number.isFinite(accuracy) && accuracy > MAX_ACC_M){
-            setStatus("warn", "GPS ضعيف…");
-            updateUI(emaSpeed, accuracy);
-            return;
-          }
-
-          let rawKmh = null;
-          if (typeof speed === "number" && isFinite(speed) && speed >= 0){
-            rawKmh = speed * 3.6;
-          } else {
-            setStatus("warn", "GPS…");
-            updateUI(emaSpeed, accuracy);
-            return;
-          }
-
-          // EMA smoothing
-          emaSpeed = EMA_ALPHA * rawKmh + (1 - EMA_ALPHA) * emaSpeed;
-
-          // Stop hysteresis
-          const tMs = pos.timestamp;
-          if (emaSpeed < STOP_SPEED_KMH){
-            if (stopSince === null) stopSince = tMs;
-            if ((tMs - stopSince) >= STOP_HOLD_MS) emaSpeed = 0;
-          } else {
-            stopSince = null;
-          }
-
-          setStatus("ok", "GPS ACTIVE");
-          updateUI(emaSpeed, accuracy);
-
-          const alertOn = emaSpeed > ALERT_SPEED_KMH;
-          setHid(alertOn);
-          if (alertOn) startAlarm();
-          else stopAlarm();
-        },
-        (err) => {
-          console.error(err);
-          setStatus("bad", "GPS ERROR");
-          updateUI(NaN, NaN);
-          stopAlarm();
-          setHid(false);
-        },
-        { enableHighAccuracy: true, maximumAge: 250, timeout: 8000 }
-      );
-    }
-
-    // =============================
-    // Init
-    // =============================
-    (async function init(){
-      await initBattery();
-      torchSupported = await detectTorchSupport();
-      if (!torchSupported){
-        hazardBtn.disabled = true;
-        hazardBtn.textContent = "HAZARD: N/A";
-      }
-      initGPS();
-    })();
-
-    window.addEventListener("beforeunload", async () => {
-      try { await stopHazard(); } catch(e){}
-      try { stopAlarm(); } catch(e){}
-    });
-  </script>
 </body>
 </html>
