@@ -7,7 +7,6 @@
 <title>Osama Meter</title>
 
 <style>
-/* === (نفس ألوانك – لم أعبث بها) === */
 :root{
   --bg:#040506;
   --panel:#0b0f15;
@@ -58,7 +57,6 @@ body{
 .status{
   display:flex;
   justify-content:flex-end;
-  gap:0;
   border:1px solid var(--border);
   border-radius:12px;
   overflow:hidden;
@@ -141,29 +139,55 @@ body{
   display:grid;
   gap:16px;
 }
+
+/* GEAR + DISTANCE ROW */
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
 .card{
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:18px;
   padding:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
+
+.card svg{
+  width:28px;
+  height:28px;
+  fill:var(--soft);
+  transition:.3s;
+}
+
+.card.accelerating svg{
+  fill:var(--green);
+  filter:drop-shadow(0 0 10px rgba(40,255,139,.7));
+}
+
 .label{
   font-size:11px;
   color:var(--soft);
 }
+
 .value{
-  font-size:28px;
+  font-size:48px;
   font-weight:900;
   color:var(--amber);
 }
 
-/* DISTANCE RESET */
-.distance-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+/* DISTANCE */
+.distance-value{
+  font-size:24px;
 }
 .reset-btn{
+  margin-top:6px;
   border:none;
   background:#1b1f26;
   color:#fff;
@@ -192,6 +216,7 @@ button{
 }
 button.active.hazard{background:var(--red);color:#000}
 button.active.lock{background:var(--green);color:#000}
+button:disabled{opacity:.5}
 </style>
 </head>
 
@@ -205,17 +230,14 @@ button.active.lock{background:var(--green);color:#000}
       <div class="brand">OSAMA&nbsp;METER</div>
       <div class="status">
         <div class="status-item">
-          <!-- CLOCK ICON -->
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           <span id="clock">--:--</span>
         </div>
         <div class="status-item">
-          <!-- BATTERY -->
           <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="20" y="10" width="2" height="4"/></svg>
           <span id="battery">--%</span>
         </div>
         <div class="status-item ok">
-          <!-- GPS -->
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
           <span id="gpsSpeed">0</span>
         </div>
@@ -225,6 +247,7 @@ button.active.lock{background:var(--green);color:#000}
 
   <!-- MAIN -->
   <div class="main">
+
     <div class="speed-core">
       <div class="speed" id="speed">0</div>
       <div class="unit">KM / H</div>
@@ -253,19 +276,25 @@ button.active.lock{background:var(--green);color:#000}
     </div>
 
     <div class="info">
-      <div class="card">
-        <div class="label">GEAR</div>
-        <div class="value" id="gear">N</div>
-      </div>
+      <div class="row">
+        <!-- GEAR -->
+        <div class="card" id="gearCard">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2l3 4h5l-4 3 2 5-4-3-4 3 2-5-4-3h5z"/>
+          </svg>
+          <div class="label">GEAR</div>
+          <div class="value" id="gear">N</div>
+        </div>
 
-      <div class="card">
-        <div class="label">DISTANCE</div>
-        <div class="distance-row">
-          <div class="value" id="distance">0.0 km</div>
+        <!-- DISTANCE -->
+        <div class="card">
+          <div class="label">DISTANCE</div>
+          <div class="distance-value" id="distance">0.00 km</div>
           <button class="reset-btn" id="resetDistance">RESET</button>
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- FOOTER -->
@@ -283,6 +312,7 @@ button.active.lock{background:var(--green);color:#000}
   const dashboard = $("dashboard");
   const speedEl = $("speed");
   const gearEl = $("gear");
+  const gearCard = $("gearCard");
   const gpsSpeedEl = $("gpsSpeed");
   const distanceEl = $("distance");
   const resetBtn = $("resetDistance");
@@ -293,13 +323,19 @@ button.active.lock{background:var(--green);color:#000}
 
   const MAX = 120;
   const LERP = 0.14;
+  const ACC_THRESHOLD = 0.5;
+  const ACC_TIMEOUT = 5000;
 
   let realSpeed = 0;
   let displaySpeed = 0;
+  let lastSpeed = 0;
+  let lastAccTime = 0;
   let distance = 0;
   let lastPos = null;
   let hazardOn = false;
   let wakeLock = null;
+  let torchTrack = null;
+  let torchTimer = null;
 
   function gearFromSpeed(v){
     if(v === 0) return "N";
@@ -316,12 +352,23 @@ button.active.lock{background:var(--green);color:#000}
     arc.style.strokeDasharray = `${r} 1`;
   }
 
+  function handleAcceleration(v){
+    const delta = v - lastSpeed;
+    if(delta > ACC_THRESHOLD){
+      gearCard.classList.add("accelerating");
+      lastAccTime = Date.now();
+    }
+    if(Date.now() - lastAccTime > ACC_TIMEOUT || v < lastSpeed){
+      gearCard.classList.remove("accelerating");
+    }
+    lastSpeed = v;
+  }
+
   navigator.geolocation.watchPosition(p=>{
     if(typeof p.coords.speed === "number"){
       realSpeed = Math.max(0, p.coords.speed * 3.6);
       gpsSpeedEl.textContent = Math.round(realSpeed);
     }
-
     if(lastPos){
       const dx = p.coords.latitude - lastPos.latitude;
       const dy = p.coords.longitude - lastPos.longitude;
@@ -334,14 +381,36 @@ button.active.lock{background:var(--green);color:#000}
   resetBtn.onclick = () => {
     distance = 0;
     lastPos = null;
-    distanceEl.textContent = "0.0 km";
+    distanceEl.textContent = "0.00 km";
   };
 
-  hazardBtn.onclick = () => {
+  async function toggleTorch(on){
+    if(!navigator.mediaDevices?.getUserMedia) return;
+    if(on){
+      const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      torchTrack = stream.getVideoTracks()[0];
+      if(torchTrack.getCapabilities().torch){
+        torchTimer = setInterval(()=>{
+          torchTrack.applyConstraints({advanced:[{torch:true}]});
+          setTimeout(()=>torchTrack.applyConstraints({advanced:[{torch:false}]}),300);
+        },600);
+      }
+    }else{
+      clearInterval(torchTimer);
+      torchTimer = null;
+      if(torchTrack){
+        torchTrack.stop();
+        torchTrack = null;
+      }
+    }
+  }
+
+  hazardBtn.onclick = async () => {
     hazardOn = !hazardOn;
     dashboard.classList.toggle("hazard-on", hazardOn);
     hazardBtn.classList.toggle("active", hazardOn);
     hazardBtn.classList.toggle("hazard", hazardOn);
+    await toggleTorch(hazardOn);
   };
 
   lockBtn.onclick = async () => {
@@ -362,7 +431,9 @@ button.active.lock{background:var(--green);color:#000}
     const s = Math.round(displaySpeed);
     speedEl.textContent = s;
     gearEl.textContent = gearFromSpeed(s);
+
     updateGauge(displaySpeed);
+    handleAcceleration(displaySpeed);
 
     requestAnimationFrame(loop);
   }
