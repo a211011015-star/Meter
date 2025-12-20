@@ -21,11 +21,13 @@
   --glow-r:rgba(255,59,59,.45);
   --glow-a:rgba(255,209,102,.35);
 
-  --dim:rgba(234,255,255,.22);
+  /* lighter secondary text */
+  --dim:rgba(234,255,255,.62);
+  --dim2:rgba(234,255,255,.44);
 }
 
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
+*{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; }
 body{
   background:var(--bg);
   display:flex;
@@ -43,46 +45,33 @@ body{
   text-transform:uppercase;
   -webkit-font-smoothing:antialiased;
   text-rendering:geometricPrecision;
+  text-shadow:
+    0 0 10px rgba(234,255,255,.16),
+    0 0 24px rgba(234,255,255,.08);
 }
-.litW{
-  color:var(--white);
-  text-shadow:0 0 14px var(--glow-w), 0 0 30px rgba(234,255,255,.18);
-}
-.litG{
-  color:var(--green);
-  text-shadow:0 0 14px var(--glow-g), 0 0 34px rgba(25,255,106,.18);
-}
-.litR{
-  color:var(--red);
-  text-shadow:0 0 14px var(--glow-r), 0 0 34px rgba(255,59,59,.18);
-}
-.litA{
-  color:var(--amber);
-  text-shadow:0 0 14px var(--glow-a), 0 0 34px rgba(255,209,102,.18);
-}
+.litW{ color:var(--white); text-shadow:0 0 14px var(--glow-w), 0 0 30px rgba(234,255,255,.16); }
+.litG{ color:var(--green); text-shadow:0 0 14px var(--glow-g), 0 0 34px rgba(25,255,106,.16); }
+.litR{ color:var(--red);   text-shadow:0 0 14px var(--glow-r), 0 0 34px rgba(255,59,59,.16); }
+.litA{ color:var(--amber); text-shadow:0 0 14px var(--glow-a), 0 0 34px rgba(255,209,102,.16); }
 
 /* ghost segments behind text */
-.ghost{
-  position:relative;
-  display:inline-block;
-}
+.ghost{ position:relative; display:inline-block; }
 .ghost::before{
   content:attr(data-ghost);
-  position:absolute;
-  inset:0;
-  color:rgba(234,255,255,.06);
+  position:absolute; inset:0;
+  color:rgba(234,255,255,.08);
   text-shadow:none;
   pointer-events:none;
 }
-.ghost > span{position:relative; z-index:1}
+.ghost > span{ position:relative; z-index:1; }
 
 /* ===== COCKPIT FRAME ===== */
 .cockpit{
-  width:min(430px, 96vw);
-  height:min(860px, 96vh);
+  width:min(440px, 96vw);
+  height:min(880px, 96vh);
   border:2px solid #111;
   border-radius:18px;
-  padding:14px;
+  padding:18px; /* margin/spacing improved */
   background:#000;
   box-shadow:0 22px 70px rgba(0,0,0,.9);
   position:relative;
@@ -96,18 +85,17 @@ body{
     0 22px 70px rgba(0,0,0,.9);
 }
 
-/* scanline + subtle noise */
+/* scanline + subtle color bloom */
 .cockpit::before{
   content:"";
   position:absolute; inset:0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,.03) 0px,
-      rgba(255,255,255,.03) 1px,
-      rgba(0,0,0,0) 3px,
-      rgba(0,0,0,0) 6px
-    );
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.03) 0px,
+    rgba(255,255,255,.03) 1px,
+    rgba(0,0,0,0) 3px,
+    rgba(0,0,0,0) 6px
+  );
   opacity:.20;
   pointer-events:none;
   mix-blend-mode:overlay;
@@ -116,9 +104,9 @@ body{
   content:"";
   position:absolute; inset:-20%;
   background:
-    radial-gradient(circle at 20% 10%, rgba(25,255,106,.08), transparent 35%),
-    radial-gradient(circle at 80% 30%, rgba(234,255,255,.06), transparent 40%),
-    radial-gradient(circle at 40% 90%, rgba(255,59,59,.05), transparent 45%);
+    radial-gradient(circle at 18% 12%, rgba(25,255,106,.08), transparent 35%),
+    radial-gradient(circle at 84% 34%, rgba(234,255,255,.06), transparent 40%),
+    radial-gradient(circle at 42% 90%, rgba(255,59,59,.05), transparent 45%);
   opacity:.85;
   pointer-events:none;
 }
@@ -126,7 +114,7 @@ body{
 /* ===== HEADER ===== */
 .header{
   text-align:center;
-  padding:8px 0 10px;
+  padding:10px 0 12px;
   border-bottom:1px solid var(--line);
   position:relative;
   z-index:2;
@@ -139,7 +127,7 @@ body{
 .header .subtitle{
   margin-top:6px;
   font-size:12px;
-  letter-spacing:.20em;
+  letter-spacing:.18em;
   color:var(--dim);
 }
 
@@ -150,9 +138,9 @@ body{
   display:grid;
   grid-template-columns: 1.15fr .85fr;
   grid-template-rows: auto auto 1fr;
-  gap:10px;
-  padding-top:10px;
-  height: calc(100% - 150px);
+  gap:14px;          /* improved */
+  padding-top:14px;  /* improved */
+  height: calc(100% - 170px);
 }
 
 /* ===== SPEED TAPE ===== */
@@ -161,7 +149,7 @@ body{
   border:1px solid var(--line);
   border-radius:14px;
   background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%), #000;
-  padding:12px;
+  padding:16px; /* improved */
   display:flex;
   flex-direction:column;
   justify-content:space-between;
@@ -172,25 +160,26 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  gap:10px;
 }
 .speedLabel{
   font-size:11px;
-  letter-spacing:.28em;
+  letter-spacing:.26em;
   color:var(--dim);
 }
 .gpsBadge{
   font-size:11px;
   letter-spacing:.18em;
   padding:6px 8px;
-  border:1px solid var(--line);
+  border:1px solid rgba(234,255,255,.18);
   border-radius:10px;
-  color:var(--dim);
+  color:rgba(234,255,255,.70);
 }
 
 .speedCenter{
   display:grid;
   place-items:center;
-  padding:8px 0;
+  padding:14px 0; /* improved */
 }
 .speedValue{
   font-size:92px;
@@ -205,12 +194,26 @@ body{
   color:var(--dim);
 }
 
+/* dashing animation strip */
+.dashStrip{
+  height:6px;
+  border-radius:999px;
+  background: repeating-linear-gradient(90deg, var(--green) 0 10px, transparent 10px 18px);
+  filter: drop-shadow(0 0 10px var(--glow-g));
+  animation: dashmove 1.0s linear infinite;
+  margin-top:12px;
+}
+@keyframes dashmove{
+  from{ background-position:0 0; }
+  to{ background-position:36px 0; }
+}
+
 /* moving mini tape window */
 .tapeWindow{
   margin-top:14px;
   border-top:1px solid var(--line);
-  padding-top:10px;
-  height:180px;
+  padding-top:12px;
+  height:210px;
   position:relative;
   overflow:hidden;
 }
@@ -225,20 +228,20 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  height:28px;
-  padding:0 4px;
+  height:30px;
+  padding:0 6px;
 }
 .tickRow .tline{
   flex:1;
   height:2px;
   margin:0 10px;
-  background:rgba(234,255,255,.15);
+  background:rgba(234,255,255,.18);
 }
-.tickRow.major .tline{ background:rgba(234,255,255,.26); }
+.tickRow.major .tline{ background:rgba(234,255,255,.30); }
 .tickRow .tnum{
-  width:48px;
+  width:54px;
   text-align:right;
-  color:rgba(234,255,255,.30);
+  color:rgba(234,255,255,.48); /* lighter */
   font-size:12px;
 }
 
@@ -248,38 +251,24 @@ body{
   left:10px; right:10px;
   top:50%;
   transform:translateY(-50%);
-  border:1px solid rgba(234,255,255,.18);
+  border:1px solid rgba(234,255,255,.22);
   border-radius:10px;
   padding:8px 10px;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.58);
   display:flex;
   justify-content:space-between;
   align-items:center;
+  z-index:2;
 }
 .marker .mLabel{ font-size:11px; color:var(--dim); letter-spacing:.22em; }
 .marker .mVal{ font-size:16px; color:var(--white); }
-
-/* dashing animation strip */
-.dashStrip{
-  height:6px;
-  border-radius:999px;
-  background:
-    repeating-linear-gradient(90deg, var(--green) 0 10px, transparent 10px 18px);
-  filter: drop-shadow(0 0 10px var(--glow-g));
-  animation: dashmove 1.1s linear infinite;
-  margin-top:10px;
-}
-@keyframes dashmove{
-  from{ background-position:0 0; }
-  to{ background-position:36px 0; }
-}
 
 /* ===== RIGHT BLOCKS ===== */
 .block{
   border:1px solid var(--line);
   border-radius:14px;
-  background:#000;
-  padding:10px;
+  background:linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+  padding:12px;
 }
 .label{
   font-size:11px;
@@ -308,7 +297,7 @@ body{
 .battOuter{
   flex:1;
   height:12px;
-  border:1px solid var(--line);
+  border:1px solid rgba(234,255,255,.16);
   border-radius:999px;
   padding:2px;
 }
@@ -325,17 +314,17 @@ body{
 .annun{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap:8px;
-  margin-top:10px;
+  gap:10px;
+  margin-top:12px;
 }
 .lamp{
-  border:1px solid var(--line);
+  border:1px solid rgba(234,255,255,.14);
   border-radius:12px;
   padding:10px 8px;
   text-align:center;
   font-size:11px;
   letter-spacing:.18em;
-  color:rgba(234,255,255,.32);
+  color:rgba(234,255,255,.55);
   background:rgba(255,255,255,.02);
 }
 .lamp.on{
@@ -348,20 +337,16 @@ body{
   color:#000;
   box-shadow:0 0 18px rgba(255,59,59,.25);
 }
-.lamp.blink{
-  animation: blink 0.7s steps(2, end) infinite;
-}
-@keyframes blink{
-  50%{ filter:brightness(1.25); }
-}
+.lamp.blink{ animation: blink 0.7s steps(2, end) infinite; }
+@keyframes blink{ 50%{ filter:brightness(1.25); } }
 
 /* ===== FOOTER ===== */
 .footer{
   position:absolute;
-  left:14px; right:14px;
-  bottom:12px;
+  left:18px; right:18px;
+  bottom:14px;
   border-top:1px solid var(--line);
-  padding-top:10px;
+  padding-top:14px;
   z-index:2;
 }
 .statusLine{
@@ -370,8 +355,8 @@ body{
   justify-content:space-between;
   gap:10px;
   font-size:11px;
-  letter-spacing:.22em;
-  color:var(--dim);
+  letter-spacing:.20em;
+  color:rgba(234,255,255,.66); /* lighter */
 }
 .dot{
   width:10px;height:10px;border-radius:50%;
@@ -385,13 +370,13 @@ body{
 
 .btnRow{
   display:flex;
-  gap:10px;
-  margin-top:10px;
+  gap:14px;          /* improved */
+  margin-top:14px;   /* improved */
 }
 button{
   flex:1;
   background:#050505;
-  border:1px solid var(--line);
+  border:1px solid rgba(234,255,255,.12);
   color:var(--white);
   padding:10px 10px;
   border-radius:12px;
@@ -401,17 +386,17 @@ button{
 }
 button:disabled{ opacity:.45; cursor:not-allowed; }
 .hint{
-  margin-top:8px;
+  margin-top:10px;
   font-size:11px;
-  color:rgba(234,255,255,.25);
-  letter-spacing:.10em;
+  color:rgba(234,255,255,.44); /* lighter */
+  letter-spacing:.08em;
   line-height:1.45;
 }
 
 /* responsive */
 @media (max-height: 740px){
   .speedValue{ font-size:78px; }
-  .tapeWindow{ height:150px; }
+  .tapeWindow{ height:170px; }
 }
 </style>
 </head>
@@ -434,7 +419,7 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
 
       <div class="speedCenter digital">
         <div class="ghost speedValue litW" id="speedGhost" data-ghost="888">
-          <span id="speed">--</span>
+          <span id="speed">N</span>
         </div>
         <div class="speedUnit">KM / H</div>
         <div class="dashStrip" aria-hidden="true"></div>
@@ -452,7 +437,9 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
     <!-- GEAR -->
     <div class="block digital">
       <div class="label">GEAR</div>
-      <div class="valueBig litA ghost" id="gearGhost" data-ghost="G8"><span id="gear">-</span></div>
+      <div class="valueBig litA ghost" id="gearGhost" data-ghost="G8">
+        <span id="gear">G1</span>
+      </div>
       <div class="annun">
         <div class="lamp" id="lampStop">STOP</div>
         <div class="lamp" id="lampMove">MOVE</div>
@@ -463,7 +450,9 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
     <div class="block digital">
       <div class="label">BATTERY</div>
       <div class="battRow">
-        <div class="battPct ghost litG" id="battGhost" data-ghost="100%"><span id="batteryPct">--%</span></div>
+        <div class="battPct ghost litG" id="battGhost" data-ghost="100%">
+          <span id="batteryPct">--%</span>
+        </div>
         <div class="battOuter"><div class="battBar" id="batteryBar"></div></div>
       </div>
 
@@ -473,14 +462,14 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
       </div>
     </div>
 
-    <!-- ALERT / ANNUNCIATORS -->
+    <!-- ANNUNCIATORS -->
     <div class="block digital">
       <div class="label">ANNUNCIATORS</div>
       <div class="annun">
         <div class="lamp" id="lampGps">GPS</div>
         <div class="lamp danger" id="lampOvs">OVERSPEED</div>
       </div>
-      <div class="hint" style="margin-top:10px;">
+      <div class="hint" style="margin-top:12px;">
         OVERSPEED فعال عندما السرعة &gt; 25 KM/H (صوت + إضاءة)
       </div>
     </div>
@@ -510,21 +499,29 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
 <script>
 /* ==============================
    Performance-first cockpit JS
+   Tape: count up & down (true motion) without lag
+   Zero shown as N
    ============================== */
 
 /* ---- CONFIG ---- */
 const CFG = {
+  // GPS quality + stability
   MAX_ACC_M: 30,
-  EMA_ALPHA: 0.22,
+  EMA_ALPHA: 0.22,        // smooth GPS speed itself
   STOP_KMH: 2.0,
   STOP_HOLD_MS: 1400,
+
+  // alarm
   ALERT_KMH: 25.0,
 
-  // render settings
-  UI_FPS_LIMIT: 30,         // cap UI refresh (mobile friendly)
-  TAPE_STEP_KMH: 5,         // tick step
-  TAPE_VISIBLE_ROWS: 11,    // number of tick rows
-  TAPE_ROW_PX: 28,          // must match CSS .tickRow height
+  // render
+  UI_FPS_LIMIT: 60,       // smooth tape; still light due to tiny DOM
+  STEP_KMH: 5,
+  VISIBLE_ROWS: 13,
+  ROW_PX: 30,             // must match .tickRow height in CSS
+
+  // "no lag feel": display follows real with fast lerp
+  DISPLAY_LERP: 0.22
 };
 
 /* ---- DOM ---- */
@@ -537,7 +534,6 @@ const statusEl = $("status");
 const accEl = $("acc");
 const dot = $("dot");
 const gpsBadge = $("gpsBadge");
-
 const tapeScale = $("tapeScale");
 
 const batteryPctEl = $("batteryPct");
@@ -554,11 +550,10 @@ const lampGps  = $("lampGps");
 const lampOvs  = $("lampOvs");
 
 /* ---- STATE ---- */
-let emaSpeed = 0;
+let gpsSpeed = 0;         // smoothed real speed from GPS
+let displaySpeed = 0;     // what UI follows (fast lerp; prevents "lag")
 let stopSince = null;
 
-let lastGpsTs = 0;
-let lastUiTs = 0;
 let latestAcc = NaN;
 let gpsOk = false;
 let overspeed = false;
@@ -574,23 +569,24 @@ let hazardOn = false;
 let hazardInterval = null;
 let torchTrack = null;
 
+let lastUiTs = 0;
+
 /* ==============================
-   UI helpers (low thrash)
+   UI helpers
    ============================== */
 function setStatus(kind, text){
   statusEl.textContent = text;
   dot.className = "dot " + kind;
 }
-function setLamp(el, on, extraClass){
+function setLamp(el, on){
   el.classList.toggle("on", !!on);
-  if(extraClass) el.classList.toggle(extraClass, !!on);
 }
 function setBlink(el, on){
   el.classList.toggle("blink", !!on);
 }
 
 /* ==============================
-   Gear rules (exact request)
+   Gear rules (exact)
    ============================== */
 function gearFromSpeed(v){
   if (v <= 10) return "G1";
@@ -605,104 +601,38 @@ function gearFromSpeed(v){
    Tape builder (DOM once)
    ============================== */
 function buildTape(){
-  // We build rows around "0" and translate container in render.
-  // Rows show values each 5 km/h with major ticks each 10.
+  tapeScale.innerHTML = "";
   const rows = [];
-  const half = Math.floor(CFG.TAPE_VISIBLE_ROWS / 2);
+  const half = Math.floor(CFG.VISIBLE_ROWS / 2);
 
   for(let i=-half; i<=half; i++){
     const row = document.createElement("div");
     row.className = "tickRow" + ((i % 2 === 0) ? " major" : "");
     const num = document.createElement("div");
     num.className = "tnum";
-    num.textContent = "0";
     const line = document.createElement("div");
     line.className = "tline";
-    const blank = document.createElement("div");
-    blank.style.width = "12px";
+    const spacer = document.createElement("div");
+    spacer.style.width = "14px";
 
     row.appendChild(num);
     row.appendChild(line);
-    row.appendChild(blank);
+    row.appendChild(spacer);
 
     tapeScale.appendChild(row);
-    rows.push({row, num});
+    rows.push({ row, num });
   }
   return rows;
 }
 const tapeRows = buildTape();
 
 /* ==============================
-   Render loop (rAF) with FPS cap
-   ============================== */
-function render(now){
-  requestAnimationFrame(render);
-
-  // cap UI fps
-  if(now - lastUiTs < (1000 / CFG.UI_FPS_LIMIT)) return;
-  lastUiTs = now;
-
-  // Speed display
-  const sp = Math.max(0, emaSpeed);
-  speedEl.textContent = Number.isFinite(sp) ? String(Math.round(sp)) : "--";
-  gearEl.textContent = Number.isFinite(sp) ? gearFromSpeed(sp) : "-";
-
-  // GPS badge / status
-  if(gpsOk){
-    gpsBadge.textContent = "GPS: OK";
-    setLamp(lampGps, true);
-  } else {
-    gpsBadge.textContent = "GPS: WAIT";
-    setLamp(lampGps, false);
-  }
-
-  // Accuracy
-  accEl.textContent = "ACC: " + (Number.isFinite(latestAcc) ? Math.round(latestAcc) : "--") + " M";
-
-  // Move/Stop lamps
-  const moving = sp > CFG.STOP_KMH;
-  setLamp(lampMove, moving);
-  setLamp(lampStop, !moving);
-
-  // Overspeed visuals
-  cockpit.classList.toggle("alert", overspeed);
-  // blink overspeed lamp when active
-  setBlink(lampOvs, overspeed);
-
-  // Wake/Haz lamps
-  setLamp(lampWake, wakeOn);
-  setLamp(lampHaz, hazardOn);
-
-  // Update tape scrolling:
-  // show ticks centered around current speed, smooth by fractional part
-  const step = CFG.TAPE_STEP_KMH;
-  const base = Math.floor(sp / step) * step;
-  const frac = (sp - base) / step; // 0..1
-  // translate so center row corresponds to base and move opposite direction with frac
-  const offsetPx = frac * CFG.TAPE_ROW_PX;
-  tapeScale.style.transform = `translateY(calc(-50% + ${offsetPx}px))`;
-
-  // Update numbers on rows
-  // center value should be base, rows around it by +/- step
-  const half = Math.floor(CFG.TAPE_VISIBLE_ROWS / 2);
-  for(let i=0; i<tapeRows.length; i++){
-    const rel = i - half; // -half..+half
-    const v = base + (rel * step);
-    tapeRows[i].num.textContent = String(Math.max(0, v));
-    // dim far ticks
-    const dist = Math.abs(rel);
-    tapeRows[i].row.style.opacity = (dist >= half) ? "0.22" : (dist >= half-1 ? "0.35" : "0.65");
-  }
-}
-
-/* ==============================
-   Alarm: Beep-Beep (WebAudio)
+   Alarm: Beep-Beep
    ============================== */
 function ensureAudio(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
-
 function playBeepOnce(){
   ensureAudio();
   const now = audioCtx.currentTime;
@@ -726,19 +656,16 @@ function playBeepOnce(){
 
   osc.start(now);
   osc.stop(now + 0.40);
-
   osc.onended = () => {
     try{ osc.disconnect(); }catch(e){}
     try{ gain.disconnect(); }catch(e){}
   };
 }
-
 function startAlarm(){
   if(beepTimer) return;
   try{ playBeepOnce(); }catch(e){}
   beepTimer = setInterval(() => { try{ playBeepOnce(); }catch(e){} }, 1200);
 }
-
 function stopAlarm(){
   if(beepTimer){
     clearInterval(beepTimer);
@@ -751,7 +678,7 @@ function stopAlarm(){
 }
 
 /* ==============================
-   GPS: stable update
+   GPS
    ============================== */
 function initGPS(){
   if(!("geolocation" in navigator)){
@@ -774,7 +701,7 @@ function initGPS(){
         return;
       }
 
-      // prefer coords.speed; if null keep last
+      // prefer coords.speed; if missing keep last
       if (typeof speed !== "number" || !isFinite(speed) || speed < 0){
         gpsOk = false;
         setStatus("warn", "GPS WAIT");
@@ -786,24 +713,22 @@ function initGPS(){
 
       const rawKmh = speed * 3.6;
 
-      // EMA smoothing
-      emaSpeed = CFG.EMA_ALPHA * rawKmh + (1 - CFG.EMA_ALPHA) * emaSpeed;
+      // smooth the real speed (EMA)
+      gpsSpeed = CFG.EMA_ALPHA * rawKmh + (1 - CFG.EMA_ALPHA) * gpsSpeed;
 
-      // stop hysteresis
+      // stop hysteresis (prevent ghost speed when standing)
       const t = pos.timestamp;
-      if (emaSpeed < CFG.STOP_KMH){
+      if (gpsSpeed < CFG.STOP_KMH){
         if (stopSince === null) stopSince = t;
-        if ((t - stopSince) >= CFG.STOP_HOLD_MS) emaSpeed = 0;
+        if ((t - stopSince) >= CFG.STOP_HOLD_MS) gpsSpeed = 0;
       } else {
         stopSince = null;
       }
 
       // overspeed
-      overspeed = emaSpeed > CFG.ALERT_KMH;
+      overspeed = gpsSpeed > CFG.ALERT_KMH;
       if (overspeed) startAlarm();
       else stopAlarm();
-
-      lastGpsTs = t;
     },
     () => {
       gpsOk = false;
@@ -859,9 +784,8 @@ async function enableWakeLock(){
     return false;
   }
 }
-
 async function toggleWake(){
-  // user gesture helps unlock audio
+  // user gesture also unlocks audio in some browsers
   if(!wakeOn){
     const ok = await enableWakeLock();
     if(ok){
@@ -870,20 +794,18 @@ async function toggleWake(){
     } else {
       setStatus("warn", "WAKELOCK FAIL");
     }
-  }else{
+  } else {
     try{ await wakeLock?.release(); }catch(e){}
     wakeLock = null;
     wakeOn = false;
     wakeBtn.textContent = "KEEP SCREEN ON: OFF";
   }
 }
-
 document.addEventListener("visibilitychange", async () => {
   if(!document.hidden && wakeOn && !wakeLock){
     await enableWakeLock();
   }
 });
-
 wakeBtn.addEventListener("click", toggleWake, { passive:true });
 
 /* ==============================
@@ -903,14 +825,13 @@ async function detectTorchSupport(){
     return false;
   }
 }
-
 async function setTorch(on){
   if(!torchTrack) return;
   await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
 }
-
 async function startHazard(){
   if(!torchSupported || hazardInterval) return;
+
   const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal:"environment" } }});
   torchTrack = stream.getVideoTracks()[0];
 
@@ -923,7 +844,6 @@ async function startHazard(){
     } catch(e){}
   }, 500);
 }
-
 async function stopHazard(){
   if(hazardInterval){
     clearInterval(hazardInterval);
@@ -935,7 +855,6 @@ async function stopHazard(){
     torchTrack = null;
   }
 }
-
 async function toggleHazard(){
   // user gesture helps audio too
   if(!torchSupported){
@@ -949,38 +868,112 @@ async function toggleHazard(){
   hazardBtn.textContent = hazardOn ? "HAZARD: ON" : "HAZARD: OFF";
 
   if(hazardOn){
-    try{
-      await startHazard();
-    }catch(e){
+    try{ await startHazard(); }
+    catch(e){
       hazardOn = false;
       hazardBtn.textContent = "HAZARD: OFF";
       setStatus("warn", "TORCH FAIL");
     }
-  }else{
+  } else {
     await stopHazard();
   }
 }
-
 hazardBtn.addEventListener("click", toggleHazard, { passive:true });
+
+/* ==============================
+   Render loop (Up & Down tape + no lag feeling)
+   ============================== */
+function render(now){
+  requestAnimationFrame(render);
+
+  // cap UI fps if desired
+  const minDt = 1000 / CFG.UI_FPS_LIMIT;
+  if (now - lastUiTs < minDt) return;
+  lastUiTs = now;
+
+  // displaySpeed follows gpsSpeed quickly -> smooth without "lag"
+  displaySpeed += (gpsSpeed - displaySpeed) * CFG.DISPLAY_LERP;
+  if (displaySpeed < 0.05) displaySpeed = 0;
+
+  const sp = Math.max(0, displaySpeed);
+  const shown = Math.round(sp);
+
+  // Show N instead of 0
+  speedEl.textContent = (shown === 0) ? "N" : String(shown);
+  gearEl.textContent = gearFromSpeed(shown);
+
+  // GPS badge + lamps
+  if(gpsOk){
+    gpsBadge.textContent = "GPS: OK";
+    setLamp(lampGps, true);
+  } else {
+    gpsBadge.textContent = "GPS: WAIT";
+    setLamp(lampGps, false);
+  }
+
+  // Accuracy
+  accEl.textContent = "ACC: " + (Number.isFinite(latestAcc) ? Math.round(latestAcc) : "--") + " M";
+
+  // STOP/MOVE lamps
+  const moving = sp > CFG.STOP_KMH;
+  setLamp(lampMove, moving);
+  setLamp(lampStop, !moving);
+
+  // Overspeed visuals
+  cockpit.classList.toggle("alert", overspeed);
+  setBlink(lampOvs, overspeed);
+
+  // Wake/Haz lamps
+  setLamp(lampWake, wakeOn);
+  setLamp(lampHaz, hazardOn);
+
+  // ===== Tape math: count up & down naturally =====
+  // Base is the nearest lower step for current speed.
+  const step = CFG.STEP_KMH;
+  const base = Math.floor(sp / step) * step;
+  const frac = (sp - base) / step; // 0..1
+
+  // Critical: move tape smoothly with frac.
+  // When speed increases -> frac increases -> transform moves upward (numbers appear to scroll up).
+  const offsetPx = -frac * CFG.ROW_PX;
+  tapeScale.style.transform = `translateY(calc(-50% + ${offsetPx}px))`;
+
+  // Update numbers on rows (ascending from top to bottom around the center).
+  const half = Math.floor(CFG.VISIBLE_ROWS / 2);
+  for(let i=0; i<tapeRows.length; i++){
+    const rel = i - half; // -half..half
+    const v = base + (rel * step);
+
+    // 0 (and below) shown as N
+    tapeRows[i].num.textContent = (v <= 0) ? "N" : String(v);
+
+    // emphasize center row
+    if (rel === 0){
+      tapeRows[i].row.style.opacity = "1";
+      tapeRows[i].num.style.color = "var(--white)";
+    } else {
+      // fade out farther ticks
+      const dist = Math.abs(rel);
+      tapeRows[i].row.style.opacity = (dist >= half) ? "0.22" : (dist >= half-1 ? "0.38" : "0.68");
+      tapeRows[i].num.style.color = "rgba(234,255,255,.48)";
+    }
+  }
+}
 
 /* ==============================
    Init
    ============================== */
 (async function init(){
-  // start render loop
   requestAnimationFrame(render);
 
-  // battery
   await initBattery();
 
-  // torch detection
   torchSupported = await detectTorchSupport();
   if(!torchSupported){
     hazardBtn.disabled = true;
     hazardBtn.textContent = "HAZARD: N/A";
   }
 
-  // gps
   initGPS();
 })();
 
@@ -991,4 +984,4 @@ window.addEventListener("beforeunload", async () => {
 </script>
 
 </body>
-</html>
+  </html>
