@@ -8,11 +8,16 @@
   <style>
     :root{
       --bg:#000;
-      --fg:#f3f6ff;
-      --muted:#9aa3b2;
+      --fg:#eaf0ff;
+      --muted:#90a0b8;
       --danger:#ff2a4f;
       --ok:#1cff9a;
-      --line:#1f1f1f;
+      --line:#1b1b1b;
+
+      /* Digital glow */
+      --glow: rgba(234,240,255,.28);
+      --glow-strong: rgba(234,240,255,.55);
+      --glow-red: rgba(255,42,79,.45);
     }
 
     *{ box-sizing:border-box; }
@@ -24,6 +29,48 @@
       display:flex;
       align-items:center;
       justify-content:center;
+    }
+
+    /* =========================
+       DIGITAL LOOK (GLOBAL)
+       ========================= */
+    .digital{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    /* “Lit segments” effect */
+    .digital-lit{
+      color: var(--fg);
+      text-shadow:
+        0 0 10px var(--glow),
+        0 0 22px rgba(234,240,255,.18),
+        0 0 36px rgba(234,240,255,.10);
+      -webkit-text-stroke: 0.35px rgba(234,240,255,.18);
+    }
+
+    /* Unlit “ghost segments” behind the text */
+    .digital-ghost{
+      position: relative;
+      display: inline-block;
+    }
+    .digital-ghost::before{
+      content: attr(data-ghost);
+      position:absolute;
+      inset: 0;
+      color: rgba(234,240,255,.06);
+      text-shadow: none;
+      -webkit-text-stroke: 0;
+      transform: translate(0, 0);
+      pointer-events:none;
+    }
+    .digital-ghost > span{
+      position: relative;
+      z-index: 1;
     }
 
     /* Wrapper */
@@ -41,8 +88,8 @@
     .screen.hid{
       border-color: rgba(255,42,79,.85);
       box-shadow:
-        0 0 22px rgba(255,42,79,.55),
-        0 0 70px rgba(255,42,79,.22),
+        0 0 22px var(--glow-red),
+        0 0 70px rgba(255,42,79,.20),
         0 18px 60px rgba(0,0,0,.75);
     }
 
@@ -54,8 +101,7 @@
       border-bottom:1px solid var(--line);
     }
     .title{
-      font-weight:800;
-      letter-spacing:.8px;
+      font-weight:900;
       font-size:18px;
       margin:0;
     }
@@ -63,6 +109,7 @@
       margin:6px 0 0;
       color: var(--muted);
       font-size:14px;
+      letter-spacing: .08em;
     }
 
     /* Main block */
@@ -83,20 +130,20 @@
       border-radius:16px;
       padding:18px 14px;
       text-align:center;
+      background: radial-gradient(600px 220px at 50% 20%, rgba(234,240,255,.05), transparent 60%);
     }
 
     .speed{
-      font-variant-numeric: tabular-nums;
       font-weight:900;
       font-size:92px;
       line-height:1;
-      letter-spacing:1px;
+      letter-spacing:.10em;
     }
 
     .unit{
       margin-top:6px;
       font-size:14px;
-      letter-spacing:2.2px;
+      letter-spacing: .28em;
       color: var(--muted);
     }
 
@@ -117,7 +164,7 @@
 
     .label{
       font-size:12px;
-      letter-spacing:1.6px;
+      letter-spacing:.22em;
       color: var(--muted);
       text-transform:uppercase;
     }
@@ -127,7 +174,10 @@
       font-weight:900;
       font-size:44px;
       color: var(--danger);
-      font-variant-numeric: tabular-nums;
+      text-shadow:
+        0 0 10px rgba(255,42,79,.22),
+        0 0 22px rgba(255,42,79,.12);
+      letter-spacing:.10em;
     }
 
     /* Battery */
@@ -139,9 +189,9 @@
       margin-top:6px;
     }
     .batteryPct{
-      font-weight:800;
+      font-weight:900;
       font-size:18px;
-      font-variant-numeric: tabular-nums;
+      letter-spacing:.10em;
     }
     .batteryBarOuter{
       width:140px;
@@ -157,6 +207,7 @@
       background: var(--fg);
       border-radius:999px;
       transition: width .2s linear;
+      box-shadow: 0 0 16px rgba(234,240,255,.12);
     }
 
     /* Status + controls */
@@ -179,6 +230,7 @@
       gap:10px;
       color: var(--muted);
       font-size:12px;
+      letter-spacing:.14em;
     }
 
     .dot{
@@ -203,8 +255,8 @@
       color: var(--fg);
       padding:10px 12px;
       border-radius:12px;
-      font-weight:800;
-      letter-spacing:.3px;
+      font-weight:900;
+      letter-spacing:.10em;
       cursor:pointer;
       flex:1;
       min-width: 140px;
@@ -218,9 +270,9 @@
       font-size:11px;
       color: var(--muted);
       line-height:1.45;
+      letter-spacing:.06em;
     }
 
-    /* Smaller screens */
     @media (max-height: 720px){
       .speed{ font-size:78px; }
       .gear{ font-size:40px; }
@@ -230,27 +282,34 @@
 
 <body>
   <div class="screen" id="screen">
-    <div class="header">
+    <div class="header digital digital-lit">
       <h1 class="title">Osama Meter</h1>
       <p class="subtitle">دراجة عبد الحليم</p>
     </div>
 
     <div class="main">
       <div class="speedWrap">
-        <div class="speed" id="speed">--</div>
-        <div class="unit" id="unit">KM/H</div>
+        <!-- ghost segments: show "88" style background -->
+        <div class="digital digital-lit digital-ghost speed" id="speedGhost" data-ghost="88">
+          <span id="speed">--</span>
+        </div>
+        <div class="digital unit" id="unit">KM/H</div>
       </div>
 
       <div class="row">
         <div class="card">
-          <div class="label">GEAR</div>
-          <div class="gear" id="gear">-</div>
+          <div class="digital label">GEAR</div>
+          <div class="digital gear digital-ghost" id="gearGhost" data-ghost="G8">
+            <span id="gear">-</span>
+          </div>
         </div>
 
         <div class="card">
-          <div class="label">BATTERY</div>
+          <div class="digital label">BATTERY</div>
           <div class="batteryWrap">
-            <div class="batteryPct" id="batteryPct">--%</div>
+            <div class="digital batteryPct digital-ghost" id="batteryPctGhost" data-ghost="100%">
+              <span id="batteryPct">--%</span>
+            </div>
             <div class="batteryBarOuter" aria-label="Battery level">
               <div class="batteryBar" id="batteryBar"></div>
             </div>
@@ -259,29 +318,29 @@
       </div>
 
       <div class="card" style="width:100%;">
-        <div class="label">ALERT</div>
-        <div style="margin-top:8px; color:var(--muted); font-size:13px;">
-          فوق <b>25</b> كم/س: إنذار صوتي + HID Highlight
+        <div class="digital label">ALERT</div>
+        <div class="digital" style="margin-top:8px; color:var(--muted); font-size:13px; letter-spacing:.08em;">
+          ABOVE <b>25</b> KM/H: BEEP + HID HIGHLIGHT
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <div class="statusLine">
+      <div class="statusLine digital">
         <div>
           <span class="dot warn" id="dot"></span>
           <span id="status">طلب صلاحية GPS…</span>
         </div>
-        <div id="acc">ACC: -- m</div>
+        <div id="acc">ACC: -- M</div>
       </div>
 
       <div class="btnRow">
-        <button id="wakeBtn" type="button">Keep Screen ON: OFF</button>
-        <button id="hazardBtn" type="button">Hazard: OFF</button>
+        <button class="digital" id="wakeBtn" type="button">KEEP SCREEN ON: OFF</button>
+        <button class="digital" id="hazardBtn" type="button">HAZARD: OFF</button>
       </div>
 
-      <div class="hint" id="hint">
-        ملاحظة: الفلاش (Hazard) يعمل فقط على أجهزة تدعم Torch وبشرط HTTPS. إذا غير مدعوم سيتم تعطيل الزر تلقائيًا.
+      <div class="hint digital" id="hint">
+        ملاحظة: قد يتطلب تشغيل الصوت/التنبيه ضغطة زر مرة واحدة. الفلاش يعمل فقط إذا الجهاز يدعم TORCH ومع HTTPS.
       </div>
     </div>
   </div>
@@ -340,17 +399,17 @@
 
     function gearFromSpeedKmh(v){
       // EXACT rules requested
-      if (v <= 10) return 1;
-      if (v <= 15) return 2;
-      if (v <= 20) return 3;
-      if (v <= 25) return 4;
-      if (v <= 30) return 5;
-      return 5;
+      if (v <= 10) return "G1";
+      if (v <= 15) return "G2";
+      if (v <= 20) return "G3";
+      if (v <= 25) return "G4";
+      if (v <= 30) return "G5";
+      return "G5";
     }
 
     function updateUI(speedKmh, accuracy){
-      if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " m";
-      else accEl.textContent = "ACC: -- m";
+      if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " M";
+      else accEl.textContent = "ACC: -- M";
 
       if (!Number.isFinite(speedKmh)){
         speedEl.textContent = "--";
@@ -359,7 +418,7 @@
       }
 
       speedEl.textContent = String(Math.round(speedKmh));
-      gearEl.textContent = String(gearFromSpeedKmh(speedKmh));
+      gearEl.textContent = gearFromSpeedKmh(speedKmh);
     }
 
     // =============================
@@ -371,7 +430,6 @@
     }
 
     function playBeepOnce(){
-      // Short double-beep: beep (120ms) pause (90ms) beep (120ms)
       ensureAudio();
       const now = audioCtx.currentTime;
 
@@ -384,11 +442,11 @@
       osc.frequency.setValueAtTime(950, now);
       osc.connect(gain);
 
-      // Envelope
-      gain.gain.setValueAtTime(0.0001, now);
+      // beep 1
       gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
+      // beep 2
       gain.gain.setValueAtTime(0.0001, now + 0.21);
       gain.gain.exponentialRampToValueAtTime(0.18, now + 0.22);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.33);
@@ -404,15 +462,10 @@
 
     function startAlarm(){
       if (beepTimer) return;
-      // On mobile, audio must be "unlocked" by user gesture sometimes.
-      // We'll start when possible; if blocked, user can tap any button.
-      try {
-        playBeepOnce();
-      } catch(e) {}
-
+      try { playBeepOnce(); } catch(e) {}
       beepTimer = setInterval(() => {
         try { playBeepOnce(); } catch(e) {}
-      }, 1200); // repeating pattern
+      }, 1200);
     }
 
     function stopAlarm(){
@@ -421,7 +474,6 @@
         beepTimer = null;
       }
       if (audioCtx){
-        // keep context (optional), but safe to close to reduce battery
         try { audioCtx.close(); } catch(e){}
         audioCtx = null;
       }
@@ -440,31 +492,30 @@
     // =============================
     async function enableWakeLock(){
       if (!("wakeLock" in navigator)) {
-        setStatus("warn", "Wake Lock غير مدعوم على هذا الجهاز.");
+        setStatus("warn", "WAKE LOCK غير مدعوم.");
         return false;
       }
       try {
         wakeLock = await navigator.wakeLock.request("screen");
         wakeLock.addEventListener("release", () => {
-          // Released by system
           wakeLock = null;
           wakeOn = false;
-          wakeBtn.textContent = "Keep Screen ON: OFF";
+          wakeBtn.textContent = "KEEP SCREEN ON: OFF";
         });
         return true;
       } catch (e){
-        setStatus("warn", "فشل تفعيل Keep Screen ON.");
+        setStatus("warn", "فشل WAKE LOCK.");
         return false;
       }
     }
 
     async function toggleWake(){
-      // user gesture -> good for audio unlock too
+      // user gesture -> helps unlock audio too
       if (!wakeOn){
         const ok = await enableWakeLock();
         if (ok){
           wakeOn = true;
-          wakeBtn.textContent = "Keep Screen ON: ON";
+          wakeBtn.textContent = "KEEP SCREEN ON: ON";
         }
       } else {
         if (wakeLock){
@@ -472,12 +523,11 @@
           wakeLock = null;
         }
         wakeOn = false;
-        wakeBtn.textContent = "Keep Screen ON: OFF";
+        wakeBtn.textContent = "KEEP SCREEN ON: OFF";
       }
     }
 
     document.addEventListener("visibilitychange", async () => {
-      // Reacquire if user enabled and page becomes visible
       if (!document.hidden && wakeOn && !wakeLock){
         await enableWakeLock();
       }
@@ -500,7 +550,6 @@
           const pct = Math.round(b.level * 100);
           batteryPctEl.textContent = pct + "%";
           batteryBarEl.style.width = pct + "%";
-          // subtle color hint
           if (pct <= 15) batteryBarEl.style.background = "var(--danger)";
           else if (pct <= 35) batteryBarEl.style.background = "#ffd166";
           else batteryBarEl.style.background = "var(--fg)";
@@ -524,10 +573,8 @@
         const caps = track.getCapabilities ? track.getCapabilities() : {};
         const hasTorch = !!caps.torch;
 
-        // stop immediately; we will reopen on toggle
         track.stop();
         stream.getTracks().forEach(t => t.stop());
-
         return hasTorch;
       } catch(e){
         return false;
@@ -536,15 +583,11 @@
 
     async function setTorch(on){
       if (!torchTrack) return;
-      // applyConstraints torch is supported on some Android devices
       await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
     }
 
     async function startHazard(){
-      if (!torchSupported){
-        hazardBtn.disabled = true;
-        return;
-      }
+      if (!torchSupported) return;
       if (hazardInterval) return;
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -552,7 +595,6 @@
       });
       torchTrack = stream.getVideoTracks()[0];
 
-      // Blink pattern
       let state = false;
       hazardInterval = setInterval(async () => {
         try{
@@ -575,22 +617,22 @@
     }
 
     async function toggleHazard(){
-      // user gesture also helps audio unlock
+      // user gesture helps audio too
       if (!torchSupported){
-        setStatus("warn", "Torch غير مدعوم على هذا الجهاز.");
+        setStatus("warn", "TORCH غير مدعوم.");
         hazardBtn.disabled = true;
         return;
       }
 
       hazardOn = !hazardOn;
-      hazardBtn.textContent = hazardOn ? "Hazard: ON" : "Hazard: OFF";
+      hazardBtn.textContent = hazardOn ? "HAZARD: ON" : "HAZARD: OFF";
 
       if (hazardOn) {
         try { await startHazard(); }
         catch(e){
-          setStatus("warn", "فشل تشغيل الفلاش (صلاحيات/جهاز).");
+          setStatus("warn", "فشل تشغيل الفلاش.");
           hazardOn = false;
-          hazardBtn.textContent = "Hazard: OFF";
+          hazardBtn.textContent = "HAZARD: OFF";
         }
       } else {
         await stopHazard();
@@ -604,7 +646,7 @@
     // =============================
     function initGPS(){
       if (!("geolocation" in navigator)){
-        setStatus("bad", "GPS غير مدعوم على هذا المتصفح.");
+        setStatus("bad", "GPS غير مدعوم.");
         updateUI(NaN, NaN);
         return;
       }
@@ -615,23 +657,18 @@
         (pos) => {
           const { speed, accuracy } = pos.coords;
 
-          // show accuracy
-          if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " m";
+          if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " M";
 
-          // filter bad accuracy
           if (Number.isFinite(accuracy) && accuracy > MAX_ACC_M){
-            setStatus("warn", "GPS ضعيف… (انتظر إشارة أفضل)");
+            setStatus("warn", "GPS ضعيف…");
             updateUI(emaSpeed, accuracy);
             return;
           }
 
-          // prefer coords.speed (m/s)
           let rawKmh = null;
           if (typeof speed === "number" && isFinite(speed) && speed >= 0){
             rawKmh = speed * 3.6;
           } else {
-            // if speed not provided, we can't reliably compute without coords history here
-            // keep last smoothed speed but mark as GPS...
             setStatus("warn", "GPS…");
             updateUI(emaSpeed, accuracy);
             return;
@@ -640,21 +677,18 @@
           // EMA smoothing
           emaSpeed = EMA_ALPHA * rawKmh + (1 - EMA_ALPHA) * emaSpeed;
 
-          // Stop hysteresis (snap to 0 if slow for a bit)
+          // Stop hysteresis
           const tMs = pos.timestamp;
           if (emaSpeed < STOP_SPEED_KMH){
             if (stopSince === null) stopSince = tMs;
-            const held = tMs - stopSince;
-            if (held >= STOP_HOLD_MS) emaSpeed = 0;
+            if ((tMs - stopSince) >= STOP_HOLD_MS) emaSpeed = 0;
           } else {
             stopSince = null;
           }
 
-          // Update UI
           setStatus("ok", "GPS ACTIVE");
           updateUI(emaSpeed, accuracy);
 
-          // Alert system
           const alertOn = emaSpeed > ALERT_SPEED_KMH;
           setHid(alertOn);
           if (alertOn) startAlarm();
@@ -662,16 +696,12 @@
         },
         (err) => {
           console.error(err);
-          setStatus("bad", "GPS ERROR (تحقق من الصلاحيات)");
+          setStatus("bad", "GPS ERROR");
           updateUI(NaN, NaN);
           stopAlarm();
           setHid(false);
         },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 250,
-          timeout: 8000
-        }
+        { enableHighAccuracy: true, maximumAge: 250, timeout: 8000 }
       );
     }
 
@@ -683,12 +713,11 @@
       torchSupported = await detectTorchSupport();
       if (!torchSupported){
         hazardBtn.disabled = true;
-        hazardBtn.textContent = "Hazard: N/A";
+        hazardBtn.textContent = "HAZARD: N/A";
       }
       initGPS();
     })();
 
-    // If user leaves the page, ensure torch stops
     window.addEventListener("beforeunload", async () => {
       try { await stopHazard(); } catch(e){}
       try { stopAlarm(); } catch(e){}
