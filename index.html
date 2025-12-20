@@ -1,155 +1,119 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Osama Meter — </title>
+<title>Osama Meter — Fixed</title>
 
 <style>
-/* ======================================================
-   DESIGN TOKENS (2050)
-   ====================================================== */
 :root{
   --bg:#050607;
-  --panel:#0b0d10;
-  --line:#1c2026;
-
-  --white:#eaf6ff;
+  --white:#ffffff;
   --green:#28ff8b;
   --amber:#ffcc66;
-  --red:#ff4d4d;
-  --cyan:#6ee7ff;
+  --red:#ff3b3b;
 
-  --glow-w:rgba(234,246,255,.35);
+  --panel:#0b0f15;
+  --line:#1c2026;
+
+  --topbar:#3a0b0b; /* dark red */
   --glow-g:rgba(40,255,139,.45);
-  --glow-r:rgba(255,77,77,.45);
-
-  /* spacing system */
-  --s-1:8px;
-  --s-2:12px;
-  --s-3:16px;
-  --s-4:24px;
+  --glow-r:rgba(255,59,59,.45);
 }
 
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-
 body{
   background:radial-gradient(circle at 50% 20%, #0c1016, #040506 70%);
-  color:var(--white);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color:var(--white);
   display:flex;
-  align-items:center;
   justify-content:center;
 }
 
-/* ======================================================
-   FRAME
-   ====================================================== */
+/* ===== FRAME ===== */
 .dashboard{
-  width:min(480px,96vw);
-  height:min(920px,96vh);
+  width:min(480px,100%);
+  min-height:100vh;
   background:linear-gradient(180deg,#07090d,#030405);
-  border:1px solid #111;
-  border-radius:24px;
-  padding:var(--s-3);
   display:grid;
   grid-template-rows:auto 1fr auto;
-  gap:var(--s-3);
-  box-shadow:0 30px 80px rgba(0,0,0,.9);
-  position:relative;
-  overflow:hidden;
 }
 
-/* ======================================================
-   TOP STATUS BAR
-   ====================================================== */
+/* ===== TOP BAR (safe area aware) ===== */
 .topbar{
-  display:grid;
-  grid-template-columns:1fr auto;
-  align-items:center;
-  gap:var(--s-3);
-  padding-bottom:var(--s-2);
-  border-bottom:1px solid var(--line);
-}
-
-.brand{
-  font-weight:800;
-  letter-spacing:.18em;
-  color:var(--green);
-  text-shadow:0 0 14px var(--glow-g);
-}
-
-.status-icons{
+  background:var(--topbar);
+  padding:12px 16px;
+  padding-top:calc(12px + env(safe-area-inset-top));
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:var(--s-3);
-  font-size:12px;
+  gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
 
-/* icon group */
-.icon{
-  display:flex;
-  align-items:center;
-  gap:6px;
+.topbar .left{
+  font-weight:900;
+  letter-spacing:.16em;
   white-space:nowrap;
 }
-.icon svg{
-  width:16px;height:16px;
-  fill:currentColor;
+.topbar .right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.topbar .right .active{
+  color:var(--green);
+}
+.topbar .right .muted{
+  opacity:.9;
+  color:#fff;
+}
+
+/* ===== MAIN ===== */
+.main{
+  padding:18px;
+  padding-bottom:18px;
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:18px;
+}
+
+/* ===== SPEED CORE ===== */
+.speed-core{
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:22px;
+  padding:20px;
+  display:grid;
+  grid-template-rows:auto auto auto;
+  align-items:center;
+}
+
+.speed{
+  font-size:92px;
+  font-weight:950;
+  text-align:center;
+  letter-spacing:.10em;
+  line-height:1;
+}
+.unit{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.3em;
   opacity:.85;
 }
 
-/* ======================================================
-   MAIN GRID
-   ====================================================== */
-.main{
-  display:grid;
-  grid-template-columns:1.2fr .8fr;
-  gap:var(--s-4);
-}
-
-/* ======================================================
-   SPEED CORE
-   ====================================================== */
-.speed-core{
-  background:linear-gradient(180deg,#0c1118,#050608);
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:var(--s-4);
-  display:grid;
-  grid-template-rows:auto auto auto 1fr;
-  align-items:center;
-}
-
-.speed-value{
-  font-size:96px;
-  font-weight:900;
-  letter-spacing:.12em;
-  text-align:center;
-  line-height:1;
-  text-shadow:0 0 22px var(--glow-w);
-}
-.speed-unit{
-  text-align:center;
-  margin-top:6px;
-  font-size:12px;
-  letter-spacing:.28em;
-  opacity:.75;
-}
-
 /* ===== RADAR GAUGE ===== */
-.gauge-wrap{
-  display:grid;
-  place-items:center;
-  margin:var(--s-2) 0 var(--s-1);
-}
 .gauge{
-  width:240px;
-  height:140px;
+  width:250px;
+  margin:12px auto 0;
+  display:block;
 }
 .track{
-  stroke:#1c2026;
+  stroke:#222;
   stroke-width:10;
   fill:none;
 }
@@ -158,63 +122,76 @@ body{
   stroke-width:10;
   fill:none;
   stroke-linecap:round;
-  filter:drop-shadow(0 0 10px rgba(40,255,139,.35));
-  stroke-dasharray:0 999;
+  stroke-dasharray:0 314; /* init */
 }
 .needle{
-  transform-origin:120px 120px;
+  transform-origin:120px 120px; /* IMPORTANT */
 }
 .needle line{
-  stroke:var(--white);
+  stroke:#fff;
   stroke-width:4;
-  filter:drop-shadow(0 0 6px rgba(234,246,255,.35));
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.25));
 }
-.needle circle{ fill:var(--white); }
+.needle circle{ fill:#fff; }
 
-/* ======================================================
-   INFO BOXES
-   ====================================================== */
+/* ===== INFO ===== */
 .info{
   display:grid;
-  grid-template-rows:repeat(3,1fr);
-  gap:var(--s-3);
+  gap:16px;
 }
 .box{
-  background:linear-gradient(180deg,#0b0f15,#040506);
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:var(--s-3);
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
+  background:var(--panel);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px;
 }
-.box-label{
+.label{
   font-size:11px;
-  letter-spacing:.22em;
-  opacity:.6;
+  opacity:.65;
+  letter-spacing:.12em;
 }
-.box-value{
+.value{
+  margin-top:8px;
   font-size:28px;
-  font-weight:800;
+  font-weight:900;
   color:var(--amber);
+  letter-spacing:.08em;
 }
 
-/* ======================================================
-   FOOTER
-   ====================================================== */
+/* ===== FOOTER BUTTONS ===== */
 .footer{
+  padding:14px 18px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom));
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:var(--s-3);
+  gap:14px;
+  border-top:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.15);
 }
-.button{
-  background:linear-gradient(180deg,#0c1118,#050608);
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:var(--s-3);
-  font-weight:700;
+button{
+  border:none;
+  border-radius:16px;
+  padding:14px;
+  font-weight:900;
   letter-spacing:.12em;
-  text-align:center;
+  background:#222;
+  color:#fff;
+}
+button.active.lock{
+  background:var(--green);
+  color:#000;
+  box-shadow:0 0 18px var(--glow-g);
+}
+button.active.hazard{
+  background:var(--red);
+  color:#000;
+  box-shadow:0 0 18px var(--glow-r);
+}
+
+.hint{
+  padding:0 18px 12px;
+  font-size:12px;
+  opacity:.8;
 }
 </style>
 </head>
@@ -225,78 +202,55 @@ body{
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="brand">OSAMA&nbsp;METER</div>
-
-    <div class="status-icons">
-      <!-- CLOCK -->
-      <div class="icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        <span id="clock">--:--</span>
-      </div>
-
-      <!-- NETWORK -->
-      <div class="icon">
-        <svg viewBox="0 0 24 24"><path d="M2 18h20v2H2zM4 14h16v2H4zM7 10h10v2H7z"/></svg>
-        <span id="net">0 kbps</span>
-      </div>
-
-      <!-- GPS SPEED -->
-      <div class="icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
-        <span id="gpsRaw">0</span>
-      </div>
-
-      <!-- BATTERY -->
-      <div class="icon">
-        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="20" y="10" width="2" height="4"/></svg>
-        <span id="battery">--%</span>
-      </div>
+    <div class="left">OSAMA&nbsp;METER</div>
+    <div class="right">
+      <span class="muted" id="clock">--:--</span>
+      <span class="muted" id="battery">--%</span>
+      <span class="active" id="gpsState">GPS</span>
+      <span class="muted" id="gpsRaw">0</span>
     </div>
+  </div>
+
+  <div class="hint" id="hint">
+    ملاحظة: GPS يحتاج HTTPS + سماح Location. إذا رفضت الإذن، سيبقى على N.
   </div>
 
   <!-- MAIN -->
   <div class="main">
 
-    <!-- SPEED -->
     <div class="speed-core">
-      <div class="speed-value" id="speed">N</div>
-      <div class="speed-unit">KM / H</div>
+      <div class="speed" id="speed">N</div>
+      <div class="unit">KM / H</div>
 
-      <!-- RADAR GAUGE -->
-      <div class="gauge-wrap">
-        <svg class="gauge" viewBox="0 0 240 140">
-          <defs>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#28ff8b"/>
-              <stop offset="70%" stop-color="#ffcc66"/>
-              <stop offset="100%" stop-color="#ff4d4d"/>
-            </linearGradient>
-          </defs>
+      <svg class="gauge" viewBox="0 0 240 140" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad">
+            <stop offset="0%" stop-color="#28ff8b"/>
+            <stop offset="70%" stop-color="#ffcc66"/>
+            <stop offset="100%" stop-color="#ff3b3b"/>
+          </linearGradient>
+        </defs>
 
-          <path class="track" d="M20 120 A100 100 0 0 1 220 120"/>
-          <path class="progress" id="progressArc" d="M20 120 A100 100 0 0 1 220 120"/>
+        <path class="track" d="M20 120 A100 100 0 0 1 220 120"/>
+        <path class="progress" id="arc" d="M20 120 A100 100 0 0 1 220 120"/>
 
-          <g class="needle" id="needle">
-            <line x1="120" y1="120" x2="120" y2="30"/>
-            <circle cx="120" cy="120" r="6"/>
-          </g>
-        </svg>
-      </div>
+        <!-- Needle starts from RIGHT at 0 speed -->
+        <g class="needle" id="needle">
+          <line x1="120" y1="120" x2="220" y2="120"/>
+          <circle cx="120" cy="120" r="6"/>
+        </g>
+      </svg>
     </div>
 
-    <!-- INFO -->
     <div class="info">
       <div class="box">
-        <div class="box-label">GEAR</div>
-        <div class="box-value" id="gear">G1</div>
+        <div class="label">GEAR</div>
+        <div class="value" id="gear">G1</div>
       </div>
+
       <div class="box">
-        <div class="box-label">NETWORK</div>
-        <div class="box-value" id="netBox">0 kbps</div>
-      </div>
-      <div class="box">
-        <div class="box-label">GPS</div>
-        <div class="box-value">ACTIVE</div>
+        <div class="label">GPS SPEED</div>
+        <div class="value" id="gpsSpeed">0</div>
       </div>
     </div>
 
@@ -304,97 +258,197 @@ body{
 
   <!-- FOOTER -->
   <div class="footer">
-    <div class="button">SCREEN LOCK</div>
-    <div class="button">HAZARD</div>
+    <button id="lockBtn" type="button">SCREEN LOCK</button>
+    <button id="hazardBtn" type="button">HAZARD</button>
   </div>
 
 </div>
 
 <script>
-/* ======================================================
-   FORCEFUL JS ARCHITECTURE
-   ====================================================== */
+(() => {
+  "use strict";
 
-/* ---------- STATE ---------- */
-const State = {
-  realSpeed: 0,
-  displaySpeed: 0,
-  lastTs: performance.now(),
-  netBytes: 0
-};
+  /* ===== DOM ===== */
+  const elSpeed = document.getElementById("speed");
+  const elGear = document.getElementById("gear");
+  const elGpsSpeed = document.getElementById("gpsSpeed");
+  const elGpsRaw = document.getElementById("gpsRaw");
+  const elGpsState = document.getElementById("gpsState");
+  const elBattery = document.getElementById("battery");
+  const elClock = document.getElementById("clock");
+  const elHint = document.getElementById("hint");
 
-/* ---------- CONFIG ---------- */
-const MAX_SPEED = 120;
-const ARC_LEN = 314;
+  const needle = document.getElementById("needle");
+  const arc = document.getElementById("arc");
 
-/* ---------- SMOOTHER ---------- */
-function smooth(current, target, dt){
-  const k = 1 - Math.exp(-dt * 0.006);
-  return current + (target - current) * k;
-}
+  const lockBtn = document.getElementById("lockBtn");
+  const hazardBtn = document.getElementById("hazardBtn");
 
-/* ---------- GEAR ---------- */
-function resolveGear(v){
-  if(v<=10) return "G1";
-  if(v<=15) return "G2";
-  if(v<=20) return "G3";
-  if(v<=25) return "G4";
-  return "G5";
-}
+  /* ===== CONFIG ===== */
+  const MAX_SPEED = 120;     // scale end
+  const ARC_LEN = 314;       // tuned for our arc path
+  const LERP = 0.16;         // UI smooth follow
 
-/* ---------- NEEDLE + ARC ---------- */
-function updateGauge(speed){
-  const ratio = Math.min(speed / MAX_SPEED, 1);
-  needle.style.transform = `rotate(${-90 + ratio*180}deg)`;
-  progressArc.style.strokeDasharray = `${ARC_LEN*ratio} ${ARC_LEN}`;
-}
+  /* ===== STATE ===== */
+  let realSpeed = 0;         // km/h (raw from GPS)
+  let displaySpeed = 0;      // smoothed for UI
+  let wakeOn = false;
+  let hazardOn = false;
 
-/* ---------- GPS ---------- */
-navigator.geolocation.watchPosition(p=>{
-  if(typeof p.coords.speed === "number"){
-    State.realSpeed = Math.max(0, p.coords.speed*3.6);
-    gpsRaw.textContent = Math.round(State.realSpeed);
+  let wakeLock = null;
+
+  /* ===== HELPERS ===== */
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+  function resolveGear(v){
+    // as per your earlier rules
+    if (v <= 10) return "G1";
+    if (v <= 15) return "G2";
+    if (v <= 20) return "G3";
+    if (v <= 25) return "G4";
+    if (v <= 30) return "G5";
+    return "G5";
   }
-},{},{enableHighAccuracy:true});
 
-/* ---------- BATTERY ---------- */
-if(navigator.getBattery){
-  navigator.getBattery().then(b=>{
-    const u=()=>battery.textContent=Math.round(b.level*100)+"%";
-    u(); b.addEventListener("levelchange",u);
-  });
-}
+  function setNeedleAndArc(speed){
+    const ratio = clamp01(speed / MAX_SPEED);
 
-/* ---------- CLOCK ---------- */
-setInterval(()=>{
-  const d=new Date();
-  clock.textContent=d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-},1000);
+    // Needle starts at RIGHT (0 deg) and moves toward LEFT (-180 deg)
+    const angleDeg = -ratio * 180;
+    needle.style.transform = `rotate(${angleDeg}deg)`;
 
-/* ---------- NETWORK SPEED (ESTIMATE) ---------- */
-setInterval(()=>{
-  const kb = Math.round(Math.random()*900 + 100);
-  net.textContent = kb + " kbps";
-  netBox.textContent = kb + " kbps";
-},1500);
+    const drawn = ARC_LEN * ratio;
+    arc.style.strokeDasharray = `${drawn} ${ARC_LEN}`;
+  }
 
-/* ---------- RENDER LOOP ---------- */
-function render(ts){
-  const dt = ts - State.lastTs;
-  State.lastTs = ts;
+  /* ===== CLOCK ===== */
+  function updateClock(){
+    const d = new Date();
+    elClock.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
 
-  State.displaySpeed = smooth(State.displaySpeed, State.realSpeed, dt);
+  /* ===== BATTERY ===== */
+  async function initBattery(){
+    if (!("getBattery" in navigator)){
+      elBattery.textContent = "N/A";
+      return;
+    }
+    try{
+      const b = await navigator.getBattery();
+      const u = () => { elBattery.textContent = Math.round(b.level * 100) + "%"; };
+      u();
+      b.addEventListener("levelchange", u);
+      b.addEventListener("chargingchange", u);
+    }catch{
+      elBattery.textContent = "N/A";
+    }
+  }
+  initBattery();
 
-  const shown = Math.round(State.displaySpeed);
-  speed.textContent = shown===0 ? "N" : shown;
-  gear.textContent = resolveGear(shown);
+  /* ===== GPS ===== */
+  function initGPS(){
+    if (!("geolocation" in navigator)){
+      elGpsState.textContent = "NO GPS";
+      elGpsState.classList.remove("active");
+      elHint.textContent = "جهازك لا يدعم GPS داخل المتصفح.";
+      return;
+    }
 
-  updateGauge(State.displaySpeed);
+    elGpsState.textContent = "GPS";
+    elGpsState.classList.add("active");
 
-  requestAnimationFrame(render);
-}
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        const s = pos.coords.speed;
+        if (typeof s === "number" && isFinite(s) && s >= 0){
+          realSpeed = s * 3.6;
+          elGpsSpeed.textContent = String(Math.round(realSpeed));
+          elGpsRaw.textContent = String(Math.round(realSpeed));
+          elGpsState.textContent = "GPS OK";
+          elGpsState.classList.add("active");
+        }
+      },
+      (err) => {
+        elGpsState.textContent = "GPS ERR";
+        elGpsState.classList.remove("active");
+        elHint.textContent =
+          "GPS لا يعمل: تأكد أنك على HTTPS وفعّلت إذن الموقع Location. (" + err.message + ")";
+      },
+      { enableHighAccuracy: true, maximumAge: 250, timeout: 8000 }
+    );
+  }
+  initGPS();
 
-requestAnimationFrame(render);
+  /* ===== WAKE LOCK (Screen Lock button) ===== */
+  async function enableWake(){
+    if (!("wakeLock" in navigator)){
+      elHint.textContent = "Wake Lock غير مدعوم في هذا المتصفح.";
+      return false;
+    }
+    try{
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+        wakeOn = false;
+        lockBtn.classList.remove("active","lock");
+      });
+      return true;
+    }catch(e){
+      elHint.textContent = "لم أستطع تفعيل Wake Lock: " + e.message;
+      return false;
+    }
+  }
+
+  async function toggleWake(){
+    if (!wakeOn){
+      const ok = await enableWake();
+      if (ok){
+        wakeOn = true;
+        lockBtn.classList.add("active","lock");
+      }
+    }else{
+      try{ await wakeLock?.release(); }catch{}
+      wakeLock = null;
+      wakeOn = false;
+      lockBtn.classList.remove("active","lock");
+    }
+  }
+
+  document.addEventListener("visibilitychange", async () => {
+    if (!document.hidden && wakeOn && !wakeLock){
+      await enableWake();
+    }
+  }, { passive:true });
+
+  lockBtn.addEventListener("click", toggleWake, { passive:true });
+
+  /* ===== HAZARD button (UI state only) ===== */
+  function toggleHazard(){
+    hazardOn = !hazardOn;
+    hazardBtn.classList.toggle("active", hazardOn);
+    hazardBtn.classList.toggle("hazard", hazardOn);
+    // (إذا تريد فلاش فعلي لاحقًا، نضيف TORCH هنا)
+  }
+  hazardBtn.addEventListener("click", toggleHazard, { passive:true });
+
+  /* ===== RENDER LOOP ===== */
+  function loop(){
+    // smooth follow
+    displaySpeed += (realSpeed - displaySpeed) * LERP;
+    if (displaySpeed < 0.2) displaySpeed = 0;
+
+    const shown = Math.round(displaySpeed);
+    elSpeed.textContent = (shown === 0) ? "N" : String(shown);
+    elGear.textContent = resolveGear(shown);
+
+    setNeedleAndArc(displaySpeed);
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
 </script>
 
 </body>
