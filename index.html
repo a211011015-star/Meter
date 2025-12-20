@@ -1,307 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Osama Meter</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Osama Meter</title>
 
-<!-- ================= REQUIRED LIBRARIES ================= -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/plugins/CSSPlugin.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/easing/EasePack.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/TweenLite.min.js"></script>
-
-<style>
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-
-body{
-  background:#000;
-  color:#fff;
-  font-family:Arial, Helvetica, sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-#hud{
-  width:100%;
-  max-width:420px;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  position:relative;
-}
-
-#hud.hid{
-  box-shadow:0 0 30px #ff2a4f, 0 0 80px rgba(255,42,79,.8);
-}
-
-/* ===== HEADER ===== */
-#header{
-  position:absolute;
-  top:30px;
-  text-align:center;
-}
-#header h1{margin:0;font-size:18px}
-#header p{margin:4px 0 0;color:#aaa}
-
-/* ===== GAUGE ===== */
-#gauge{
-  position:relative;
-  width:300px;
-  height:300px;
-}
-
-#circle{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:10px solid #1a1a1a;
-}
-
-#numbers{
-  position:absolute;
-  inset:0;
-  font-size:12px;
-}
-
-#numbers span{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform-origin:50% 145px;
-}
-
-#mi-km{
-  position:absolute;
-  bottom:50px;
-  width:100%;
-  text-align:center;
-  font-size:14px;
-  color:#aaa;
-}
-
-#needle{
-  position:absolute;
-  width:4px;
-  height:140px;
-  background:#ff2a4f;
-  left:50%;
-  bottom:50%;
-  transform-origin:50% 100%;
-  transform:rotate(-120deg);
-}
-
-#needle::after{
-  content:"";
-  position:absolute;
-  bottom:-8px;
-  left:-6px;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  background:#fff;
-}
-
-/* ===== CENTER INFO ===== */
-#center{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-#speed{
-  font-size:96px;
-  font-weight:900;
-}
-
-#gear-label{
-  margin-top:10px;
-  color:#aaa;
-  font-size:14px;
-}
-#gear{
-  font-size:36px;
-  color:#ff2a4f;
-  font-weight:900;
-}
-
-/* ===== BATTERY ===== */
-#battery{
-  position:absolute;
-  right:20px;
-  height:120px;
-  width:16px;
-  border:2px solid #fff;
-  padding:2px;
-}
-#battery-level{
-  width:100%;
-  background:#fff;
-  height:50%;
-}
-
-/* ===== CONTROLS ===== */
-#controls{
-  position:absolute;
-  bottom:30px;
-  display:flex;
-  gap:20px;
-}
-
-button{
-  background:#000;
-  border:2px solid #333;
-  color:#fff;
-  padding:8px 14px;
-  font-weight:700;
-}
-</style>
-</head>
-
-<body>
-
-<div id="hud">
-  <div id="header">
-    <h1>Osama Meter</h1>
-    <p>دراجة عبد الحليم</p>
-  </div>
-
-  <div id="gauge">
-    <div id="circle"></div>
-    <div id="numbers"></div>
-    <div id="mi-km">KM/H</div>
-    <div id="needle"></div>
-
-    <div id="center">
-      <div id="speed">0</div>
-      <div id="gear-label">GEAR</div>
-      <div id="gear">1</div>
-    </div>
-  </div>
-
-  <div id="battery">
-    <div id="battery-level"></div>
-  </div>
-
-  <div id="controls">
-    <button id="hazardBtn">Hazard</button>
-    <button id="wakeBtn">Screen ON</button>
-  </div>
-</div>
-
-<script>
-/* ================= CONFIG ================= */
-var MAX_KMH = 60;
-var START_ANGLE = -120;
-var END_ANGLE = 120;
-var EMA = 0.25;
-
-/* ================= STATE ================= */
-var emaSpeed = 0;
-var lastPos = null;
-var audioCtx = null;
-var osc = null;
-var hazardOn = false;
-var torchTrack = null;
-
-/* ================= BUILD SCALE ================= */
-for(var i=0;i<=MAX_KMH;i+=10){
-  var angle = START_ANGLE + (i/MAX_KMH)*(END_ANGLE-START_ANGLE);
-  var s = $("<span>"+i+"</span>");
-  s.css({
-    transform:
-      "rotate("+angle+"deg) translate(0,-145px) rotate("+(-angle)+"deg)"
-  });
-  $("#numbers").append(s);
-}
-
-/* ================= HELPERS ================= */
-function gearFromSpeed(v){
-  if(v<=10) return 1;
-  if(v<=15) return 2;
-  if(v<=20) return 3;
-  if(v<=25) return 4;
-  return 5;
-}
-
-function setNeedle(kmh){
-  var a = START_ANGLE + (kmh/MAX_KMH)*(END_ANGLE-START_ANGLE);
-  TweenLite.to("#needle",0.8,{rotation:a,ease:Power2.easeOut});
-}
-
-/* ================= BEEP ================= */
-function startBeep(){
-  if(audioCtx) return;
-  audioCtx=new AudioContext();
-  osc=audioCtx.createOscillator();
-  osc.frequency.value=900;
-  osc.connect(audioCtx.destination);
-  osc.start();
-}
-function stopBeep(){
-  if(osc){osc.stop();osc=null;}
-  audioCtx=null;
-}
-
-/* ================= GPS ================= */
-navigator.geolocation.watchPosition(p=>{
-  var kmh = p.coords.speed!=null ? p.coords.speed*3.6 : 0;
-  emaSpeed = EMA*kmh + (1-EMA)*emaSpeed;
-
-  $("#speed").text(Math.round(emaSpeed));
-  $("#gear").text(gearFromSpeed(emaSpeed));
-  setNeedle(emaSpeed);
-
-  if(emaSpeed>25){
-    $("#hud").addClass("hid");
-    startBeep();
-  }else{
-    $("#hud").removeClass("hid");
-    stopBeep();
-  }
-},{},{enableHighAccuracy:true});
-
-/* ================= BATTERY ================= */
-if(navigator.getBattery){
-  navigator.getBattery().then(b=>{
-    function update(){
-      $("#battery-level").css("height",(b.level*100)+"%");
+  <style>
+    :root{
+      --bg:#000;
+      --fg:#f3f6ff;
+      --muted:#9aa3b2;
+      --danger:#ff2a4f;
+      --ok:#1cff9a;
+      --line:#1f1f1f;
     }
-    update();
-    b.addEventListener("levelchange",update);
-  });
-}
 
-/* ================= WAKE LOCK ================= */
-$("#wakeBtn").on("click",async()=>{
-  if("wakeLock" in navigator){
-    await navigator.wakeLock.request("screen");
-  }
-});
-
-/* ================= HAZARD FLASH ================= */
-$("#hazardBtn").on("click",async()=>{
-  hazardOn=!hazardOn;
-  if(!hazardOn){
-    if(torchTrack) torchTrack.applyConstraints({advanced:[{torch:false}]});
-    return;
-  }
-  const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-  torchTrack = stream.getVideoTracks()[0];
-  setInterval(()=>{
-    if(hazardOn){
-      torchTrack.applyConstraints({advanced:[{torch:true}]});
-      setTimeout(()=>torchTrack.applyConstraints({advanced:[{torch:false}]}),300);
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+    body{
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-  },600);
-});
-</script>
 
-</body>
-</html>
+    /* Wrapper */
+    .screen{
+      width:min(440px, 96vw);
+      height:min(860px, 96vh);
+      border:2px solid #111;
+      border-radius:18px;
+      padding:18px;
+      position:relative;
+      background:#000;
+      box-shadow: 0 18px 60px rgba(0,0,0,.75);
+    }
+
+    .screen.hid{
+      border-color: rgba(255,42,79,.85);
+      box-shadow:
+        0 0 22px rgba(255,42,79,.55),
+        0 0 70px rgba(255,42,79,.22),
+        0 18px 60px rgba(0,0,0,.75);
+    }
+
+    /* Header */
+    .header{
+      text-align:center;
+      padding-top:6px;
+      padding-bottom:12px;
+      border-bottom:1px solid var(--line);
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.8px;
+      font-size:18px;
+      margin:0;
+    }
+    .subtitle{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size:14px;
+    }
+
+    /* Main block */
+    .main{
+      height: calc(100% - 120px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:18px;
+      padding:18px 6px;
+    }
+
+    /* Big speed */
+    .speedWrap{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px 14px;
+      text-align:center;
+    }
+
+    .speed{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      font-size:92px;
+      line-height:1;
+      letter-spacing:1px;
+    }
+
+    .unit{
+      margin-top:6px;
+      font-size:14px;
+      letter-spacing:2.2px;
+      color: var(--muted);
+    }
+
+    /* Gear row */
+    .row{
+      width:100%;
+      display:flex;
+      gap:12px;
+    }
+
+    .card{
+      flex:1;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 12px;
+      background:#000;
+    }
+
+    .label{
+      font-size:12px;
+      letter-spacing:1.6px;
+      color: var(--muted);
+      text-transform:uppercase;
+    }
+
+    .gear{
+      margin-top:6px;
+      font-weight:900;
+      font-size:44px;
+      color: var(--danger);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Battery */
+    .batteryWrap{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:6px;
+    }
+    .batteryPct{
+      font-weight:800;
+      font-size:18px;
+      font-variant-numeric: tabular-nums;
+    }
+    .batteryBarOuter{
+      width:140px;
+      height:14px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:2px;
+      overflow:hidden;
+    }
+    .batteryBar{
+      height:100%;
+      width:0%;
+      background: var(--fg);
+      border-radius:999px;
+      transition: width .2s linear;
+    }
+
+    /* Status + controls */
+    .footer{
+      position:absolute;
+      left:18px;
+      right:18px;
+      bottom:16px;
+      border-top:1px solid var(--line);
+      padding-top:12px;
+      display
