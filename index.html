@@ -167,4 +167,532 @@
       bottom:16px;
       border-top:1px solid var(--line);
       padding-top:12px;
-      display
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .statusLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color: var(--muted);
+      font-size:12px;
+    }
+
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:#333;
+      display:inline-block;
+      margin-inline-end:8px;
+    }
+    .dot.ok{ background: var(--ok); box-shadow:0 0 16px rgba(28,255,154,.25); }
+    .dot.warn{ background: #ffd166; box-shadow:0 0 16px rgba(255,209,102,.18); }
+    .dot.bad{ background: var(--danger); box-shadow:0 0 16px rgba(255,42,79,.22); }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#050505;
+      color: var(--fg);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      letter-spacing:.3px;
+      cursor:pointer;
+      flex:1;
+      min-width: 140px;
+    }
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .hint{
+      font-size:11px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    /* Smaller screens */
+    @media (max-height: 720px){
+      .speed{ font-size:78px; }
+      .gear{ font-size:40px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen" id="screen">
+    <div class="header">
+      <h1 class="title">Osama Meter</h1>
+      <p class="subtitle">دراجة عبد الحليم</p>
+    </div>
+
+    <div class="main">
+      <div class="speedWrap">
+        <div class="speed" id="speed">--</div>
+        <div class="unit" id="unit">KM/H</div>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <div class="label">GEAR</div>
+          <div class="gear" id="gear">-</div>
+        </div>
+
+        <div class="card">
+          <div class="label">BATTERY</div>
+          <div class="batteryWrap">
+            <div class="batteryPct" id="batteryPct">--%</div>
+            <div class="batteryBarOuter" aria-label="Battery level">
+              <div class="batteryBar" id="batteryBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="width:100%;">
+        <div class="label">ALERT</div>
+        <div style="margin-top:8px; color:var(--muted); font-size:13px;">
+          فوق <b>25</b> كم/س: إنذار صوتي + HID Highlight
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="statusLine">
+        <div>
+          <span class="dot warn" id="dot"></span>
+          <span id="status">طلب صلاحية GPS…</span>
+        </div>
+        <div id="acc">ACC: -- m</div>
+      </div>
+
+      <div class="btnRow">
+        <button id="wakeBtn" type="button">Keep Screen ON: OFF</button>
+        <button id="hazardBtn" type="button">Hazard: OFF</button>
+      </div>
+
+      <div class="hint" id="hint">
+        ملاحظة: الفلاش (Hazard) يعمل فقط على أجهزة تدعم Torch وبشرط HTTPS. إذا غير مدعوم سيتم تعطيل الزر تلقائيًا.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =============================
+    // CONFIG (tuned for mobile stability)
+    // =============================
+    const MAX_ACC_M = 30;          // ignore noisy fixes
+    const EMA_ALPHA = 0.22;        // smoothing
+    const STOP_SPEED_KMH = 2.0;    // stop threshold
+    const STOP_HOLD_MS = 1400;     // snap to 0 after stable stop
+    const ALERT_SPEED_KMH = 25.0;  // beep + HID above this
+
+    // =============================
+    // UI elements
+    // =============================
+    const screen = document.getElementById("screen");
+    const speedEl = document.getElementById("speed");
+    const gearEl = document.getElementById("gear");
+    const statusEl = document.getElementById("status");
+    const dotEl = document.getElementById("dot");
+    const accEl = document.getElementById("acc");
+    const batteryPctEl = document.getElementById("batteryPct");
+    const batteryBarEl = document.getElementById("batteryBar");
+    const wakeBtn = document.getElementById("wakeBtn");
+    const hazardBtn = document.getElementById("hazardBtn");
+
+    // =============================
+    // State
+    // =============================
+    let emaSpeed = 0;
+    let stopSince = null;
+
+    // Beep state
+    let audioCtx = null;
+    let beepTimer = null;
+
+    // Wake lock state
+    let wakeLock = null;
+    let wakeOn = false;
+
+    // Hazard (torch) state
+    let hazardOn = false;
+    let hazardInterval = null;
+    let torchTrack = null;
+    let torchSupported = false;
+
+    // =============================
+    // Helpers
+    // =============================
+    function setStatus(kind, text){
+      statusEl.textContent = text;
+      dotEl.className = "dot " + kind;
+    }
+
+    function gearFromSpeedKmh(v){
+      // EXACT rules requested
+      if (v <= 10) return 1;
+      if (v <= 15) return 2;
+      if (v <= 20) return 3;
+      if (v <= 25) return 4;
+      if (v <= 30) return 5;
+      return 5;
+    }
+
+    function updateUI(speedKmh, accuracy){
+      if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " m";
+      else accEl.textContent = "ACC: -- m";
+
+      if (!Number.isFinite(speedKmh)){
+        speedEl.textContent = "--";
+        gearEl.textContent = "-";
+        return;
+      }
+
+      speedEl.textContent = String(Math.round(speedKmh));
+      gearEl.textContent = String(gearFromSpeedKmh(speedKmh));
+    }
+
+    // =============================
+    // Beep-Beep (WebAudio)
+    // =============================
+    function ensureAudio(){
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playBeepOnce(){
+      // Short double-beep: beep (120ms) pause (90ms) beep (120ms)
+      ensureAudio();
+      const now = audioCtx.currentTime;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.connect(audioCtx.destination);
+
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(950, now);
+      osc.connect(gain);
+
+      // Envelope
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      gain.gain.setValueAtTime(0.0001, now + 0.21);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.22);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.33);
+
+      osc.start(now);
+      osc.stop(now + 0.40);
+
+      osc.onended = () => {
+        try { osc.disconnect(); } catch(e){}
+        try { gain.disconnect(); } catch(e){}
+      };
+    }
+
+    function startAlarm(){
+      if (beepTimer) return;
+      // On mobile, audio must be "unlocked" by user gesture sometimes.
+      // We'll start when possible; if blocked, user can tap any button.
+      try {
+        playBeepOnce();
+      } catch(e) {}
+
+      beepTimer = setInterval(() => {
+        try { playBeepOnce(); } catch(e) {}
+      }, 1200); // repeating pattern
+    }
+
+    function stopAlarm(){
+      if (beepTimer){
+        clearInterval(beepTimer);
+        beepTimer = null;
+      }
+      if (audioCtx){
+        // keep context (optional), but safe to close to reduce battery
+        try { audioCtx.close(); } catch(e){}
+        audioCtx = null;
+      }
+    }
+
+    // =============================
+    // HID highlight (visual alert)
+    // =============================
+    function setHid(on){
+      if (on) screen.classList.add("hid");
+      else screen.classList.remove("hid");
+    }
+
+    // =============================
+    // Wake Lock
+    // =============================
+    async function enableWakeLock(){
+      if (!("wakeLock" in navigator)) {
+        setStatus("warn", "Wake Lock غير مدعوم على هذا الجهاز.");
+        return false;
+      }
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => {
+          // Released by system
+          wakeLock = null;
+          wakeOn = false;
+          wakeBtn.textContent = "Keep Screen ON: OFF";
+        });
+        return true;
+      } catch (e){
+        setStatus("warn", "فشل تفعيل Keep Screen ON.");
+        return false;
+      }
+    }
+
+    async function toggleWake(){
+      // user gesture -> good for audio unlock too
+      if (!wakeOn){
+        const ok = await enableWakeLock();
+        if (ok){
+          wakeOn = true;
+          wakeBtn.textContent = "Keep Screen ON: ON";
+        }
+      } else {
+        if (wakeLock){
+          try { await wakeLock.release(); } catch(e){}
+          wakeLock = null;
+        }
+        wakeOn = false;
+        wakeBtn.textContent = "Keep Screen ON: OFF";
+      }
+    }
+
+    document.addEventListener("visibilitychange", async () => {
+      // Reacquire if user enabled and page becomes visible
+      if (!document.hidden && wakeOn && !wakeLock){
+        await enableWakeLock();
+      }
+    });
+
+    wakeBtn.addEventListener("click", toggleWake);
+
+    // =============================
+    // Battery indicator
+    // =============================
+    async function initBattery(){
+      if (!("getBattery" in navigator)){
+        batteryPctEl.textContent = "N/A";
+        batteryBarEl.style.width = "0%";
+        return;
+      }
+      try{
+        const b = await navigator.getBattery();
+        const update = () => {
+          const pct = Math.round(b.level * 100);
+          batteryPctEl.textContent = pct + "%";
+          batteryBarEl.style.width = pct + "%";
+          // subtle color hint
+          if (pct <= 15) batteryBarEl.style.background = "var(--danger)";
+          else if (pct <= 35) batteryBarEl.style.background = "#ffd166";
+          else batteryBarEl.style.background = "var(--fg)";
+        };
+        update();
+        b.addEventListener("levelchange", update);
+        b.addEventListener("chargingchange", update);
+      } catch(e){
+        batteryPctEl.textContent = "N/A";
+      }
+    }
+
+    // =============================
+    // Hazard Torch (flashlight)
+    // =============================
+    async function detectTorchSupport(){
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }});
+        const track = stream.getVideoTracks()[0];
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        const hasTorch = !!caps.torch;
+
+        // stop immediately; we will reopen on toggle
+        track.stop();
+        stream.getTracks().forEach(t => t.stop());
+
+        return hasTorch;
+      } catch(e){
+        return false;
+      }
+    }
+
+    async function setTorch(on){
+      if (!torchTrack) return;
+      // applyConstraints torch is supported on some Android devices
+      await torchTrack.applyConstraints({ advanced: [{ torch: !!on }] });
+    }
+
+    async function startHazard(){
+      if (!torchSupported){
+        hazardBtn.disabled = true;
+        return;
+      }
+      if (hazardInterval) return;
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }
+      });
+      torchTrack = stream.getVideoTracks()[0];
+
+      // Blink pattern
+      let state = false;
+      hazardInterval = setInterval(async () => {
+        try{
+          state = !state;
+          await setTorch(state);
+        } catch(e){}
+      }, 500);
+    }
+
+    async function stopHazard(){
+      if (hazardInterval){
+        clearInterval(hazardInterval);
+        hazardInterval = null;
+      }
+      if (torchTrack){
+        try { await setTorch(false); } catch(e){}
+        try { torchTrack.stop(); } catch(e){}
+        torchTrack = null;
+      }
+    }
+
+    async function toggleHazard(){
+      // user gesture also helps audio unlock
+      if (!torchSupported){
+        setStatus("warn", "Torch غير مدعوم على هذا الجهاز.");
+        hazardBtn.disabled = true;
+        return;
+      }
+
+      hazardOn = !hazardOn;
+      hazardBtn.textContent = hazardOn ? "Hazard: ON" : "Hazard: OFF";
+
+      if (hazardOn) {
+        try { await startHazard(); }
+        catch(e){
+          setStatus("warn", "فشل تشغيل الفلاش (صلاحيات/جهاز).");
+          hazardOn = false;
+          hazardBtn.textContent = "Hazard: OFF";
+        }
+      } else {
+        await stopHazard();
+      }
+    }
+
+    hazardBtn.addEventListener("click", toggleHazard);
+
+    // =============================
+    // GPS Speed (stable)
+    // =============================
+    function initGPS(){
+      if (!("geolocation" in navigator)){
+        setStatus("bad", "GPS غير مدعوم على هذا المتصفح.");
+        updateUI(NaN, NaN);
+        return;
+      }
+
+      setStatus("warn", "طلب صلاحية GPS…");
+
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          const { speed, accuracy } = pos.coords;
+
+          // show accuracy
+          if (Number.isFinite(accuracy)) accEl.textContent = "ACC: " + Math.round(accuracy) + " m";
+
+          // filter bad accuracy
+          if (Number.isFinite(accuracy) && accuracy > MAX_ACC_M){
+            setStatus("warn", "GPS ضعيف… (انتظر إشارة أفضل)");
+            updateUI(emaSpeed, accuracy);
+            return;
+          }
+
+          // prefer coords.speed (m/s)
+          let rawKmh = null;
+          if (typeof speed === "number" && isFinite(speed) && speed >= 0){
+            rawKmh = speed * 3.6;
+          } else {
+            // if speed not provided, we can't reliably compute without coords history here
+            // keep last smoothed speed but mark as GPS...
+            setStatus("warn", "GPS…");
+            updateUI(emaSpeed, accuracy);
+            return;
+          }
+
+          // EMA smoothing
+          emaSpeed = EMA_ALPHA * rawKmh + (1 - EMA_ALPHA) * emaSpeed;
+
+          // Stop hysteresis (snap to 0 if slow for a bit)
+          const tMs = pos.timestamp;
+          if (emaSpeed < STOP_SPEED_KMH){
+            if (stopSince === null) stopSince = tMs;
+            const held = tMs - stopSince;
+            if (held >= STOP_HOLD_MS) emaSpeed = 0;
+          } else {
+            stopSince = null;
+          }
+
+          // Update UI
+          setStatus("ok", "GPS ACTIVE");
+          updateUI(emaSpeed, accuracy);
+
+          // Alert system
+          const alertOn = emaSpeed > ALERT_SPEED_KMH;
+          setHid(alertOn);
+          if (alertOn) startAlarm();
+          else stopAlarm();
+        },
+        (err) => {
+          console.error(err);
+          setStatus("bad", "GPS ERROR (تحقق من الصلاحيات)");
+          updateUI(NaN, NaN);
+          stopAlarm();
+          setHid(false);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 250,
+          timeout: 8000
+        }
+      );
+    }
+
+    // =============================
+    // Init
+    // =============================
+    (async function init(){
+      await initBattery();
+      torchSupported = await detectTorchSupport();
+      if (!torchSupported){
+        hazardBtn.disabled = true;
+        hazardBtn.textContent = "Hazard: N/A";
+      }
+      initGPS();
+    })();
+
+    // If user leaves the page, ensure torch stops
+    window.addEventListener("beforeunload", async () => {
+      try { await stopHazard(); } catch(e){}
+      try { stopAlarm(); } catch(e){}
+    });
+  </script>
+</body>
+</html>
